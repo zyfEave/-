@@ -67,6 +67,40 @@ clear_log() {
   : > "$LOG_FILE"
 }
 
+
+print_doctor_json() {
+  ensure_dirs
+
+  _log_writable=0
+  if touch "$LOG_FILE" 2>/dev/null; then
+    _log_writable=1
+  fi
+
+  _module_path=$(json_escape "$MODDIR")
+  _data_path=$(json_escape "$DATA_DIR")
+  _config_path=$(json_escape "$CONFIG_FILE")
+  _log_path=$(json_escape "$LOG_FILE")
+  _state_path=$(json_escape "$STATE_DIR")
+  _script_path=$(json_escape "$SCRIPT_DIR/config.sh")
+  _id_output=$(json_escape "$(id 2>&1 | tr '\n' ' ')")
+  _sh_path=$(json_escape "$(command -v sh 2>&1 | tr '\n' ' ')")
+
+  printf '{'
+  printf '"module_path":"%s",' "$_module_path"
+  printf '"data_path":"%s",' "$_data_path"
+  printf '"config_path":"%s",' "$_config_path"
+  printf '"log_path":"%s",' "$_log_path"
+  printf '"state_path":"%s",' "$_state_path"
+  printf '"script_path":"%s",' "$_script_path"
+  printf '"script_exists":%s,' "$(json_bool "$([ -f "$SCRIPT_DIR/config.sh" ] && echo 1 || echo 0)")"
+  printf '"config_exists":%s,' "$(json_bool "$([ -f "$CONFIG_FILE" ] && echo 1 || echo 0)")"
+  printf '"log_writable":%s,' "$(json_bool "$_log_writable")"
+  printf '"id":"%s",' "$_id_output"
+  printf '"sh":"%s"' "$_sh_path"
+  printf '}\n'
+}
+
+
 start_scheduler_after_config_save() {
   if [ "$AUTO_ENABLED" = "1" ]; then
     if start_scheduler_if_needed; then
@@ -92,6 +126,9 @@ case "$1" in
   clear-log)
     clear_log
     ;;
+  doctor)
+    print_doctor_json
+    ;;
   defaults)
     write_default_config
     start_scheduler_after_config_save
@@ -99,7 +136,7 @@ case "$1" in
     print_config_json
     ;;
   *)
-    echo "usage: $0 get-json|save|log|clear-log|defaults"
+    echo "usage: $0 get-json|save|log|clear-log|doctor|defaults"
     exit 1
     ;;
 esac

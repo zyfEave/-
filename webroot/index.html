@@ -455,11 +455,11 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { exec as ksuExec } from "kernelsu";
-
     const $ = (id) => document.getElementById(id);
 
     const state = {
+      exec: null,
+      bridgeName: "",
       root: moduleRoot(),
       mode: "daily",
       dailyTimes: ["03:00"],
@@ -480,7 +480,82 @@
     }
 
     async function resolveExec() {
-      return (command) => ksuExec(command);
+      if (state.exec) return state.exec;
+
+      try {
+        const ksu = await import("kernelsu");
+        if (typeof ksu.exec === "function") {
+          state.bridgeName = "kernelsu";
+          state.exec = (command) => ksu.exec(command);
+          return state.exec;
+        }
+      } catch (error) {
+        // Some managers do not support bare module imports; fall back to injected bridges.
+      }
+
+      const bridgeNames = ["ksu", "KernelSU", "apatch", "APatch"];
+      for (const name of bridgeNames) {
+        const bridge = window[name];
+        if (!bridge || typeof bridge.exec !== "function") continue;
+
+        state.bridgeName = name;
+        state.exec = (command) => callInjectedExec(name, command);
+        return state.exec;
+      }
+
+      throw new Error("No WebUI shell exec API detected; check WebUI support and root permission");
+    }
+
+    function callInjectedExec(name, command) {
+      return new Promise((resolve, reject) => {
+        const callbackName = "autofire_exec_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        let finished = false;
+        let timer = 0;
+
+        function cleanup() {
+          window.clearTimeout(timer);
+          try {
+            delete window[callbackName];
+          } catch (error) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        function finish(value) {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          resolve(value);
+        }
+
+        function fail(error) {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(error);
+        }
+
+        window[callbackName] = (errno, stdout, stderr) => finish({ errno, stdout, stderr });
+        timer = window.setTimeout(() => fail(new Error(name + ".exec callback timeout")), 30000);
+
+        try {
+          const returned = window[name].exec(command, "{}", callbackName);
+          if (returned !== undefined) {
+            Promise.resolve(returned).then(finish, fail);
+          }
+        } catch (callbackError) {
+          cleanup();
+          finished = false;
+          window[callbackName] = undefined;
+
+          try {
+            const returned = window[name].exec(command);
+            Promise.resolve(returned).then(finish, fail);
+          } catch (directError) {
+            fail(callbackError);
+          }
+        }
+      });
     }
 
     function normalizeExecResult(result) {
@@ -549,6 +624,45 @@
       throw new Error(lastError || "Cannot find script/config.sh");
     }
 
+    function formatError(error) {
+      return error && error.message ? error.message : String(error || "unknown error");
+    }
+
+    function formatDoctor(raw) {
+      try {
+        const info = JSON.parse(raw.trim());
+        return [
+          "Doctor:",
+          "bridge=" + (state.bridgeName || "none"),
+          "module=" + (info.module_path || ""),
+          "data=" + (info.data_path || ""),
+          "config=" + (info.config_path || ""),
+          "log=" + (info.log_path || ""),
+          "script_exists=" + info.script_exists,
+          "config_exists=" + info.config_exists,
+          "log_writable=" + info.log_writable,
+          "id=" + (info.id || ""),
+          "sh=" + (info.sh || ""),
+        ].join("\n");
+      } catch (error) {
+        return raw.trim() || "doctor returned empty output";
+      }
+    }
+
+    async function showConnectionError(error) {
+      const message = formatError(error);
+      $("modulePath").textContent = "Connection failed: " + message;
+      let detail = "Connection failed: " + message;
+
+      try {
+        const raw = await moduleScript("doctor");
+        detail += "\n\n" + formatDoctor(raw);
+      } catch (doctorError) {
+        detail += "\n\ndoctor failed: " + formatError(doctorError);
+      }
+
+      $("logOutput").textContent = detail;
+    }
     function toast(message) {
       const node = $("toast");
       node.textContent = message;
@@ -648,7 +762,11 @@
       if (!text) {
         throw new Error("No JSON output from config script; reboot the module/device and try again");
       }
-      applyConfig(JSON.parse(text));
+      try {
+        applyConfig(JSON.parse(text));
+      } catch (error) {
+        throw new Error("config.sh JSON parse failed: " + text.slice(0, 180));
+      }
     }
 
     async function refreshLog() {
@@ -662,7 +780,8 @@
         await work();
         if (okMessage) toast(okMessage);
       } catch (error) {
-        toast(error.message || String(error));
+        await showConnectionError(error);
+        toast(formatError(error));
       } finally {
         setBusy(false);
       }
