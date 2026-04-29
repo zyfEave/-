@@ -22,7 +22,12 @@ set_data_paths() {
   CONFIG_FILE="$CONFIG_DIR/autofire.conf"
   LOG_FILE="$LOG_DIR/autofire.log"
   STATE_FILE="$STATE_DIR/scheduler.state"
-  PID_FILE="$STATE_DIR/scheduler.pid"
+  RUN_DIR="$MODDIR/run"
+  PID_FILE="$RUN_DIR/autofire_timed.pid"
+  NATIVE_PID_FILE="$RUN_DIR/autofire_timed.pid"
+  SUPERVISOR_PID_FILE="$RUN_DIR/autofire_supervisor.pid"
+  SUPERVISOR_LOCK_DIR="$RUN_DIR/supervisor.lock"
+  SUPERVISOR_STOP_FILE="$RUN_DIR/stop"
   SCHEDULE_FILE="$STATE_DIR/autofire.schedule"
   RUN_LOCK_DIR="$STATE_DIR/run.lock"
   SCHEDULER_LOCK_DIR="$STATE_DIR/scheduler.lock"
@@ -35,15 +40,36 @@ LEGACY_LOG_FILE="$MODDIR/logs/autofire.log"
 LEGACY_STATE_DIR="$MODDIR/state"
 TIMER_BIN="$MODDIR/bin/autofire_timed"
 
+select_timer_bin() {
+  _abilist=$(getprop ro.product.cpu.abilist 2>/dev/null)
+  case ",$_abilist," in
+    *",arm64-v8a,"*)
+      TIMER_BIN="$MODDIR/bin/autofire_timed"
+      ;;
+    *",armeabi-v7a,"*|*",armeabi,"*)
+      if [ -f "$MODDIR/bin/autofire_timed_armeabi-v7a" ]; then
+        TIMER_BIN="$MODDIR/bin/autofire_timed_armeabi-v7a"
+      else
+        TIMER_BIN="$MODDIR/bin/autofire_timed"
+      fi
+      ;;
+    *)
+      TIMER_BIN="$MODDIR/bin/autofire_timed"
+      ;;
+  esac
+}
+
+select_timer_bin
+
 WECHAT_PKG="com.tencent.mm"
 DOUYIN_PKG="com.ss.android.ugc.aweme"
 
 ensure_dirs() {
-  mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" 2>/dev/null
+  mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" "$RUN_DIR" 2>/dev/null
 
   if ! touch "$LOG_FILE" 2>/dev/null; then
     set_data_paths "$MODULE_DATA_FALLBACK"
-    mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" 2>/dev/null
+    mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" "$RUN_DIR" 2>/dev/null
     touch "$LOG_FILE" 2>/dev/null
   fi
 
@@ -204,6 +230,15 @@ load_config() {
 
 trim_log() {
   [ -f "$LOG_FILE" ] || return
+  _byte_count=$(wc -c < "$LOG_FILE" 2>/dev/null | tr -d ' ')
+  case "$_byte_count" in
+    ''|*[!0-9]*) _byte_count=0 ;;
+  esac
+  if [ "$_byte_count" -gt 1048576 ]; then
+    tail -n 3000 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
+    return
+  fi
+
   _line_count=$(wc -l < "$LOG_FILE" 2>/dev/null | tr -d ' ')
   case "$_line_count" in
     ''|*[!0-9]*) return ;;
@@ -269,8 +304,14 @@ home_device() {
 }
 
 acquire_wake_lock() {
+  _wake_name=${1:-$WAKE_LOCK_NAME}
+  _wake_timeout=${2:-}
   if [ -w /sys/power/wake_lock ]; then
-    echo "$WAKE_LOCK_NAME" > /sys/power/wake_lock 2>/dev/null
+    if [ -n "$_wake_timeout" ]; then
+      echo "$_wake_name $_wake_timeout" > /sys/power/wake_lock 2>/dev/null
+    else
+      echo "$_wake_name" > /sys/power/wake_lock 2>/dev/null
+    fi
     return $?
   fi
 
@@ -278,22 +319,56 @@ acquire_wake_lock() {
 }
 
 release_wake_lock() {
+  _wake_name=${1:-$WAKE_LOCK_NAME}
   if [ -w /sys/power/wake_unlock ]; then
-    echo "$WAKE_LOCK_NAME" > /sys/power/wake_unlock 2>/dev/null
+    echo "$_wake_name" > /sys/power/wake_unlock 2>/dev/null
     return $?
   fi
 
   return 1
 }
 
-scheduler_is_running() {
-  [ -f "$PID_FILE" ] || return 1
-  _scheduler_pid=$(sed -n '1p' "$PID_FILE" 2>/dev/null)
-  case "$_scheduler_pid" in
+pid_exists() {
+  _pid=$1
+  case "$_pid" in
     ''|*[!0-9]*) return 1 ;;
   esac
+  [ -d "/proc/$_pid" ] && kill -0 "$_pid" 2>/dev/null
+}
 
-  kill -0 "$_scheduler_pid" 2>/dev/null
+pid_cmdline_contains() {
+  _pid=$1
+  _needle=$2
+  pid_exists "$_pid" || return 1
+  [ -r "/proc/$_pid/cmdline" ] || return 1
+  _cmdline=$(tr '\000' ' ' < "/proc/$_pid/cmdline" 2>/dev/null)
+  case "$_cmdline" in
+    *"$_needle"*) return 0 ;;
+  esac
+  return 1
+}
+
+wait_pid_gone() {
+  _pid=$1
+  _limit=${2:-5}
+  _waited=0
+  while pid_exists "$_pid" && [ "$_waited" -lt "$_limit" ]; do
+    sleep 1
+    _waited=$((_waited + 1))
+  done
+  ! pid_exists "$_pid"
+}
+
+supervisor_is_running() {
+  [ -f "$SUPERVISOR_PID_FILE" ] || return 1
+  _supervisor_pid=$(sed -n '1p' "$SUPERVISOR_PID_FILE" 2>/dev/null)
+  pid_cmdline_contains "$_supervisor_pid" "$MODDIR/script/supervisor.sh" || pid_cmdline_contains "$_supervisor_pid" "supervisor.sh"
+}
+
+scheduler_is_running() {
+  [ -f "$NATIVE_PID_FILE" ] || return 1
+  _scheduler_pid=$(sed -n '1p' "$NATIVE_PID_FILE" 2>/dev/null)
+  pid_cmdline_contains "$_scheduler_pid" "$TIMER_BIN" || pid_cmdline_contains "$_scheduler_pid" "autofire_timed"
 }
 
 start_scheduler_if_needed() {

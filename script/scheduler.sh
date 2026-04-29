@@ -8,44 +8,67 @@ CMD=${1:-start}
 write_schedule_file() {
   ensure_dirs
   load_config
-  : > "$SCHEDULE_FILE"
+  _tmp_schedule="$SCHEDULE_FILE.tmp.$$"
+  rm -f "$_tmp_schedule"
+  : > "$_tmp_schedule"
 
   if [ "$AUTO_ENABLED" != "1" ]; then
     log_msg "INFO" "自动定时未开启，不生成定时表"
+    rm -f "$_tmp_schedule"
     return 1
   fi
 
   case "$SCHEDULE_MODE" in
     daily)
       for _time_item in $(echo "$DAILY_TIMES" | tr ',' ' '); do
-        echo "daily|$_time_item|scheduler-daily-$_time_item" >> "$SCHEDULE_FILE"
+        echo "daily|$_time_item|scheduler-daily-$_time_item" >> "$_tmp_schedule"
       done
       ;;
     *)
-      echo "interval|$INTERVAL_MINUTES|scheduler-interval" >> "$SCHEDULE_FILE"
+      echo "interval|$INTERVAL_MINUTES|scheduler-interval" >> "$_tmp_schedule"
       ;;
   esac
 
-  if [ ! -s "$SCHEDULE_FILE" ]; then
+  if [ ! -s "$_tmp_schedule" ]; then
     log_msg "WARN" "定时表为空，调度器不会启动"
+    rm -f "$_tmp_schedule"
     return 1
   fi
 
-  log_msg "INFO" "定时表已生成：$SCHEDULE_FILE"
+  if mv "$_tmp_schedule" "$SCHEDULE_FILE" 2>/dev/null; then
+    log_msg "INFO" "定时表已原子生成：$SCHEDULE_FILE"
+  else
+    log_msg "ERROR" "定时表原子替换失败：$SCHEDULE_FILE"
+    rm -f "$_tmp_schedule"
+    return 1
+  fi
+
   return 0
 }
 
 stop_scheduler_process() {
   ensure_dirs
 
+  touch "$SUPERVISOR_STOP_FILE" 2>/dev/null
+
   if scheduler_is_running; then
-    _pid=$(sed -n '1p' "$PID_FILE" 2>/dev/null)
+    _pid=$(sed -n '1p' "$NATIVE_PID_FILE" 2>/dev/null)
     kill "$_pid" 2>/dev/null
-    sleep 1
-    if kill -0 "$_pid" 2>/dev/null; then
+    if ! wait_pid_gone "$_pid" 5; then
       kill -9 "$_pid" 2>/dev/null
+      wait_pid_gone "$_pid" 3 >/dev/null 2>&1
     fi
     log_msg "INFO" "定时器已停止：pid=$_pid"
+  fi
+
+  if supervisor_is_running; then
+    _supervisor_pid=$(sed -n '1p' "$SUPERVISOR_PID_FILE" 2>/dev/null)
+    kill "$_supervisor_pid" 2>/dev/null
+    if ! wait_pid_gone "$_supervisor_pid" 5; then
+      kill -9 "$_supervisor_pid" 2>/dev/null
+      wait_pid_gone "$_supervisor_pid" 3 >/dev/null 2>&1
+    fi
+    log_msg "INFO" "supervisor已停止：pid=$_supervisor_pid"
   fi
 
   if [ "$(read_state_value scheduler_wake_lock)" = "1" ]; then
@@ -57,11 +80,15 @@ stop_scheduler_process() {
     rm -f "$STATE_DIR/scheduler_wake_lock"
   fi
 
-  rm -f "$PID_FILE"
+  release_wake_lock xiaoxiang_dispatch_wake_lock >/dev/null 2>&1
+  release_wake_lock xiaoxiang_task_wake_lock >/dev/null 2>&1
+
+  rm -f "$PID_FILE" "$NATIVE_PID_FILE" "$SUPERVISOR_PID_FILE" "$SUPERVISOR_STOP_FILE"
   rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
+  rmdir "$SUPERVISOR_LOCK_DIR" 2>/dev/null
 }
 
-start_native_scheduler() {
+start_supervisor() {
   if [ ! -f "$TIMER_BIN" ]; then
     return 1
   fi
@@ -72,33 +99,49 @@ start_native_scheduler() {
     return 1
   fi
 
-  nohup "$TIMER_BIN" "$MODDIR" "$DATA_DIR" "$SCHEDULE_FILE" "$LOG_FILE" >/dev/null 2>&1 &
+  _timer_version=$("$TIMER_BIN" --version 2>&1)
+  case "$_timer_version" in
+    *timerfd_epoll_eventfd_heap*)
+      log_msg "INFO" "native定时器版本验证通过：$_timer_version"
+      ;;
+    *)
+      log_msg "ERROR" "native定时器版本验证失败，疑似旧二进制：$TIMER_BIN output=$_timer_version"
+      return 1
+      ;;
+  esac
+
+  if [ ! -f "$MODDIR/script/supervisor.sh" ]; then
+    log_msg "ERROR" "supervisor脚本不存在：$MODDIR/script/supervisor.sh"
+    return 1
+  fi
+  chmod 0755 "$MODDIR/script/supervisor.sh" 2>/dev/null
+
+  if supervisor_is_running; then
+    log_msg "INFO" "supervisor已在运行：pid=$(sed -n '1p' "$SUPERVISOR_PID_FILE" 2>/dev/null)"
+    return 0
+  fi
+
+  rm -f "$SUPERVISOR_PID_FILE"
+  rmdir "$SUPERVISOR_LOCK_DIR" 2>/dev/null
+
+  rm -f "$SUPERVISOR_STOP_FILE"
+  nohup sh "$MODDIR/script/supervisor.sh" >/dev/null 2>&1 &
   _pid=$!
-  echo "$_pid" > "$PID_FILE"
+  echo "$_pid" > "$SUPERVISOR_PID_FILE"
   sleep 1
   if ! kill -0 "$_pid" 2>/dev/null; then
-    rm -f "$PID_FILE"
-    log_msg "WARN" "native定时器启动后立即退出，切换到shell兜底：$TIMER_BIN"
+    rm -f "$SUPERVISOR_PID_FILE"
+    log_msg "ERROR" "supervisor启动后立即退出"
     return 1
   fi
 
-  if acquire_wake_lock; then
-    write_state_value scheduler_wake_lock 1
-    log_msg "INFO" "native定时器已持有唤醒锁，息屏定时将按稳定优先运行"
-  else
-    log_msg "WARN" "native定时器唤醒锁不可用，息屏深睡时仍可能延迟"
-  fi
-
-  log_msg "INFO" "native低开销定时器已启动：pid=$_pid"
+  log_msg "INFO" "supervisor已启动：pid=$_pid；native空闲时不长期持有唤醒锁，任务执行时短暂申请"
   return 0
 }
 
 start_fallback_scheduler() {
-  nohup sh "$MODDIR/script/scheduler.sh" fallback-loop >/dev/null 2>&1 &
-  _pid=$!
-  echo "$_pid" > "$PID_FILE"
-  log_msg "WARN" "已启用shell兜底定时：pid=$_pid"
-  return 0
+  log_msg "ERROR" "native定时器不可用，已禁用shell sleep轮询兜底；请重新编译或恢复$TIMER_BIN"
+  return 1
 }
 
 start_scheduler() {
@@ -145,15 +188,43 @@ start_scheduler() {
     return 0
   fi
 
-  if start_native_scheduler; then
+  if start_supervisor; then
     return 0
   fi
 
   start_fallback_scheduler
+  return $?
 }
 
 reload_scheduler_process() {
-  stop_scheduler_process
+  ensure_dirs
+  load_config
+
+  if [ "$AUTO_ENABLED" != "1" ]; then
+    stop_scheduler_process
+    return 0
+  fi
+
+  if scheduler_is_running; then
+    log_msg "INFO" "开始热重载native定时器"
+    if write_schedule_file; then
+      _pid=$(sed -n '1p' "$NATIVE_PID_FILE" 2>/dev/null)
+      if kill -HUP "$_pid" 2>/dev/null; then
+        log_msg "INFO" "已通过SIGHUP通知native定时器热重载：pid=$_pid"
+        return 0
+      fi
+      log_msg "WARN" "native定时器热重载信号发送失败，将重启调度器：pid=$_pid"
+    else
+      stop_scheduler_process
+      return 0
+    fi
+  fi
+
+  if supervisor_is_running; then
+    log_msg "INFO" "native暂未运行但supervisor存在，等待supervisor拉起"
+    return 0
+  fi
+
   start_scheduler
 }
 
@@ -214,47 +285,10 @@ run_daily_fallback() {
 }
 
 fallback_loop() {
-  log_msg "WARN" "shell兜底定时循环已启动，建议编译并放入bin/autofire_timed以降低开销"
-  write_state_value last_interval_epoch "$(date +%s)"
-
-  WAKE_LOCK_HELD=0
-  WAKE_LOCK_WARNED=0
-
-  while ! is_module_disabled; do
-    load_config
-
-    if [ "$AUTO_ENABLED" != "1" ]; then
-      log_msg "INFO" "自动定时已关闭，shell兜底定时退出"
-      break
-    fi
-
-    if [ "$WAKE_LOCK_HELD" != "1" ]; then
-      if acquire_wake_lock; then
-        WAKE_LOCK_HELD=1
-        write_state_value scheduler_wake_lock 1
-        log_msg "INFO" "shell兜底定时已持有唤醒锁"
-      elif [ "$WAKE_LOCK_WARNED" != "1" ]; then
-        WAKE_LOCK_WARNED=1
-        log_msg "WARN" "唤醒锁不可用，息屏深睡时定时可能延迟"
-      fi
-    fi
-
-    case "$SCHEDULE_MODE" in
-      daily) run_daily_fallback ;;
-      *) run_interval_fallback ;;
-    esac
-
-    sleep 60
-  done
-
-  if [ "$WAKE_LOCK_HELD" = "1" ]; then
-    release_wake_lock >/dev/null 2>&1
-    rm -f "$STATE_DIR/scheduler_wake_lock"
-    log_msg "INFO" "shell兜底定时已释放唤醒锁"
-  fi
-
+  log_msg "ERROR" "shell sleep轮询兜底已禁用；请使用native timerfd/epoll调度器"
   rm -f "$PID_FILE"
   rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
+  return 1
 }
 
 case "$CMD" in
@@ -264,14 +298,20 @@ case "$CMD" in
   stop)
     stop_scheduler_process
     ;;
-  reload|restart)
+  reload)
     reload_scheduler_process
     ;;
+  restart)
+    stop_scheduler_process
+    start_scheduler
+    ;;
   status)
-    if scheduler_is_running; then
-      echo "running $(sed -n '1p' "$PID_FILE" 2>/dev/null)"
+    if supervisor_is_running || scheduler_is_running; then
+      echo "running supervisor=$(sed -n '1p' "$SUPERVISOR_PID_FILE" 2>/dev/null) supervisorState=$(read_state_value supervisor_state) native=$(sed -n '1p' "$NATIVE_PID_FILE" 2>/dev/null) active_workers=$(read_state_value active_workers) ready_workers=$(read_state_value ready_workers) workerPolicy=$(read_state_value worker_policy) selectedClock=$(read_state_value selected_clock) wakeCapable=$(read_state_value wake_capable) suspendAware=$(read_state_value suspend_aware) lastDriftMs=$(read_state_value last_drift_ms) lastWorkerExit=$(read_state_value last_worker_exit)"
+    elif [ -f "$SUPERVISOR_STOP_FILE" ]; then
+      echo "stopped stop_marker=1"
     else
-      echo "stopped"
+      echo "stopped supervisorState=$(read_state_value supervisor_state)"
     fi
     ;;
   fallback-loop)

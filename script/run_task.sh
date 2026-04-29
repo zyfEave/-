@@ -6,6 +6,7 @@ SCRIPT_DIR=$(cd "${0%/*}" 2>/dev/null && pwd)
 SOURCE=${1:-manual}
 DELAY_SECONDS=${2:-0}
 COMMAND_TIMEOUT_SECONDS=${COMMAND_TIMEOUT_SECONDS:-12}
+BOOT_WAIT_SECONDS=${BOOT_WAIT_SECONDS:-120}
 
 case "$DELAY_SECONDS" in
   ''|*[!0-9]*) DELAY_SECONDS=0 ;;
@@ -31,16 +32,138 @@ if is_module_disabled; then
   exit 0
 fi
 
-if ! mkdir "$RUN_LOCK_DIR" 2>/dev/null; then
-  log_msg "WARN" "任务跳过：已有任务正在运行，来源=$SOURCE_LABEL"
+TASK_LOCK_MAX_SECONDS=${TASK_LOCK_MAX_SECONDS:-180}
+TASK_WAKE_LOCK_NAME=${TASK_WAKE_LOCK_NAME:-xiaoxiang_task_wake_lock}
+TASK_WAKE_LOCK_TIMEOUT_NS=${TASK_WAKE_LOCK_TIMEOUT_NS:-120000000000}
+
+cleanup_stale_run_lock() {
+  rm -f "$RUN_LOCK_DIR/pid" "$RUN_LOCK_DIR/started" "$RUN_LOCK_DIR/source" "$RUN_LOCK_DIR/task" "$RUN_LOCK_DIR/label" "$RUN_LOCK_DIR/cmdline"
+  rmdir "$RUN_LOCK_DIR" 2>/dev/null
+}
+
+write_run_lock_metadata() {
+  echo "$$" > "$RUN_LOCK_DIR/pid"
+  date +%s > "$RUN_LOCK_DIR/started"
+  echo "$SOURCE" > "$RUN_LOCK_DIR/source"
+  echo "$SOURCE" > "$RUN_LOCK_DIR/task"
+  echo "$SOURCE_LABEL" > "$RUN_LOCK_DIR/label"
+  tr '\000' ' ' < "/proc/$$/cmdline" > "$RUN_LOCK_DIR/cmdline" 2>/dev/null || echo "run_task.sh $SOURCE" > "$RUN_LOCK_DIR/cmdline"
+}
+
+acquire_run_lock() {
+  if mkdir "$RUN_LOCK_DIR" 2>/dev/null; then
+    write_run_lock_metadata
+    return 0
+  fi
+
+  _owner_pid=$(sed -n '1p' "$RUN_LOCK_DIR/pid" 2>/dev/null)
+  _started=$(sed -n '1p' "$RUN_LOCK_DIR/started" 2>/dev/null)
+  _lock_cmdline=$(sed -n '1p' "$RUN_LOCK_DIR/cmdline" 2>/dev/null)
+  _now=$(date +%s)
+  case "$_started" in
+    ''|*[!0-9]*) _age=-1 ;;
+    *) _age=$((_now - _started)) ;;
+  esac
+
+  case "$_owner_pid" in
+    ''|*[!0-9]*)
+      log_msg "WARN" "任务锁异常，清理stale lock：来源=$SOURCE_LABEL，reason=invalid_owner"
+      cleanup_stale_run_lock
+      ;;
+    *)
+      if ! kill -0 "$_owner_pid" 2>/dev/null; then
+        log_msg "WARN" "任务锁stale，清理后继续：来源=$SOURCE_LABEL，owner=$_owner_pid，ageSeconds=$_age"
+        cleanup_stale_run_lock
+      else
+        _owner_cmdline=$(tr '\000' ' ' < "/proc/$_owner_pid/cmdline" 2>/dev/null)
+        case "$_owner_cmdline" in
+          *run_task.sh*) ;;
+          *)
+            log_msg "WARN" "任务锁stale，清理后继续：来源=$SOURCE_LABEL，owner=$_owner_pid，reason=cmdline_mismatch，lockCmdline=$_lock_cmdline，procCmdline=$_owner_cmdline"
+            cleanup_stale_run_lock
+            ;;
+        esac
+      fi
+
+      if [ ! -d "$RUN_LOCK_DIR" ]; then
+        :
+      elif [ "$_age" -gt "$TASK_LOCK_MAX_SECONDS" ]; then
+        log_msg "WARN" "任务跳过：已有任务仍在运行且超过期望时长，来源=$SOURCE_LABEL，owner=$_owner_pid，ageSeconds=$_age，maxSeconds=$TASK_LOCK_MAX_SECONDS，reason=already_running_timeout_exceeded"
+        return 1
+      else
+        log_msg "WARN" "任务跳过：已有任务正在运行，来源=$SOURCE_LABEL，owner=$_owner_pid，ageSeconds=$_age，reason=already_running"
+        return 1
+      fi
+      ;;
+  esac
+
+  if mkdir "$RUN_LOCK_DIR" 2>/dev/null; then
+    write_run_lock_metadata
+    return 0
+  fi
+
+  log_msg "WARN" "任务跳过：任务锁获取失败，来源=$SOURCE_LABEL"
+  return 1
+}
+
+if ! acquire_run_lock; then
   exit 2
 fi
 
+TASK_WAKE_LOCK_HELD=0
+TASK_WAKE_LOCK_STARTED=0
+
+acquire_task_wake_lock() {
+  if acquire_wake_lock "$TASK_WAKE_LOCK_NAME" "$TASK_WAKE_LOCK_TIMEOUT_NS"; then
+    TASK_WAKE_LOCK_HELD=1
+    TASK_WAKE_LOCK_STARTED=$(date +%s)
+    write_state_value task_wake_lock 1
+    log_msg "INFO" "任务唤醒锁已获取：来源=$SOURCE_LABEL，name=$TASK_WAKE_LOCK_NAME，timeoutNs=$TASK_WAKE_LOCK_TIMEOUT_NS"
+  else
+    log_msg "WARN" "任务唤醒锁不可用或获取失败，息屏深睡时任务执行可能被系统延迟：来源=$SOURCE_LABEL，name=$TASK_WAKE_LOCK_NAME"
+  fi
+}
+
+release_task_wake_lock() {
+  if [ "$TASK_WAKE_LOCK_HELD" = "1" ]; then
+    _released_at=$(date +%s)
+    _held_seconds=$((_released_at - TASK_WAKE_LOCK_STARTED))
+    if release_wake_lock "$TASK_WAKE_LOCK_NAME"; then
+      log_msg "INFO" "任务唤醒锁已释放：来源=$SOURCE_LABEL，name=$TASK_WAKE_LOCK_NAME，heldMs=$((_held_seconds * 1000))"
+    else
+      log_msg "WARN" "任务唤醒锁释放失败：来源=$SOURCE_LABEL，name=$TASK_WAKE_LOCK_NAME，heldMs=$((_held_seconds * 1000))"
+    fi
+    rm -f "$STATE_DIR/task_wake_lock"
+    TASK_WAKE_LOCK_HELD=0
+  fi
+}
+
 cleanup_run_lock() {
   rm -f "$STATE_DIR/cmd_timeout.$$"
+  release_task_wake_lock
+  rm -f "$RUN_LOCK_DIR/pid" "$RUN_LOCK_DIR/started" "$RUN_LOCK_DIR/source" "$RUN_LOCK_DIR/task" "$RUN_LOCK_DIR/label" "$RUN_LOCK_DIR/cmdline"
   rmdir "$RUN_LOCK_DIR" 2>/dev/null
 }
-trap cleanup_run_lock EXIT INT TERM
+trap cleanup_run_lock EXIT
+trap 'cleanup_run_lock; exit 130' INT
+trap 'cleanup_run_lock; exit 143' TERM
+trap 'cleanup_run_lock; exit 129' HUP
+
+wait_boot_completed() {
+  _waited=0
+  while [ "$(getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
+    if [ "$_waited" -ge "$BOOT_WAIT_SECONDS" ]; then
+      log_msg "WARN" "任务跳过：系统尚未完成开机，来源=$SOURCE_LABEL，waitedSeconds=$_waited，exitCode=75"
+      write_state_value last_result "bootNotReady"
+      exit 75
+    fi
+    sleep 5
+    _waited=$((_waited + 5))
+  done
+}
+
+wait_boot_completed
+acquire_task_wake_lock
 
 run_quiet_with_timeout() {
   _timeout=$1

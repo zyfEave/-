@@ -3,145 +3,324 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#101418" media="(prefers-color-scheme: dark)">
-  <title>&#23567;&#35937;</title>
+  <meta name="theme-color" content="#eef7f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1115" media="(prefers-color-scheme: dark)">
+  <title>小象</title>
   <style>
     :root {
       color-scheme: light dark;
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --text: #1f2933;
-      --muted: #68737d;
-      --line: #d7dde3;
+      --bg: #eef7f5;
+      --bg-soft: #f7faf9;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: #ffffff;
+      --text: #14212b;
+      --muted: #657581;
+      --line: rgba(35, 64, 75, 0.14);
       --accent: #0f766e;
-      --accent-strong: #0b5d57;
+      --accent-2: #14b8a6;
+      --accent-soft: rgba(20, 184, 166, 0.14);
+      --ok: #047857;
+      --ok-bg: rgba(16, 185, 129, 0.14);
+      --warn: #b45309;
+      --warn-bg: rgba(245, 158, 11, 0.16);
       --danger: #b42318;
-      --danger-bg: #fff1f0;
-      --danger-line: #f0b4ad;
-      --code-bg: #101820;
-      --code-text: #d8e2e7;
-      --shadow: 0 10px 28px rgba(28, 39, 49, 0.08);
+      --danger-bg: rgba(244, 63, 94, 0.12);
+      --code-bg: #0b1217;
+      --code-text: #dce7ec;
+      --shadow: 0 18px 50px rgba(14, 34, 44, 0.12);
+      --radius: 18px;
+      --radius-sm: 12px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #101418;
-        --panel: #171d22;
-        --text: #e6edf3;
-        --muted: #9aa8b4;
-        --line: #303a44;
+        --bg: #0b1115;
+        --bg-soft: #10181d;
+        --panel: rgba(20, 29, 35, 0.94);
+        --panel-strong: #151f26;
+        --text: #e8f0f5;
+        --muted: #96a8b3;
+        --line: rgba(210, 230, 240, 0.13);
         --accent: #2dd4bf;
-        --accent-strong: #5eead4;
-        --danger: #ff8a80;
-        --danger-bg: #321a1a;
-        --danger-line: #6d3131;
-        --code-bg: #070a0d;
-        --code-text: #d8e2e7;
+        --accent-2: #5eead4;
+        --accent-soft: rgba(45, 212, 191, 0.16);
+        --ok: #34d399;
+        --ok-bg: rgba(52, 211, 153, 0.14);
+        --warn: #fbbf24;
+        --warn-bg: rgba(251, 191, 36, 0.15);
+        --danger: #fb7185;
+        --danger-bg: rgba(251, 113, 133, 0.14);
+        --code-bg: #05080b;
+        --code-text: #dce7ec;
         --shadow: none;
       }
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(20, 184, 166, 0.24), transparent 32%),
+        radial-gradient(circle at 92% 6%, rgba(59, 130, 246, 0.14), transparent 34%),
+        var(--bg);
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 15px;
+      color: var(--text);
+      background: var(--panel-strong);
+      font-weight: 750;
+      letter-spacing: 0.01em;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+      touch-action: manipulation;
+    }
+
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.55; transform: none; }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+      color: #fff;
+    }
+
+    button.danger {
+      color: var(--danger);
+      background: var(--danger-bg);
+      border-color: rgba(244, 63, 94, 0.28);
+    }
+
+    button.ghost {
+      background: transparent;
     }
 
     main {
-      width: min(920px, 100%);
+      width: min(1060px, 100%);
       margin: 0 auto;
-      padding: calc(18px + env(safe-area-inset-top, 0px)) calc(18px + env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) calc(18px + env(safe-area-inset-left, 0px));
+      padding:
+        calc(16px + env(safe-area-inset-top, 0px))
+        calc(16px + env(safe-area-inset-right, 0px))
+        calc(24px + env(safe-area-inset-bottom, 0px))
+        calc(16px + env(safe-area-inset-left, 0px));
     }
 
-    header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
       margin-bottom: 16px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(255,255,255,0.58)),
+        var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .hero {
+        background:
+          linear-gradient(135deg, rgba(21,31,38,0.95), rgba(17,25,31,0.78)),
+          var(--panel);
+      }
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(20, 184, 166, 0.18);
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      font-size: 28px;
+      box-shadow: 0 14px 30px rgba(20, 184, 166, 0.28);
     }
 
     h1 {
       margin: 0;
-      font-size: 24px;
-      font-weight: 720;
-      letter-spacing: 0;
+      font-size: 28px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
     }
 
-    .subtle {
+    .subtitle {
+      margin-top: 4px;
       color: var(--muted);
       font-size: 13px;
-      margin-top: 4px;
       overflow-wrap: anywhere;
     }
 
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.42);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .badge { background: rgba(255, 255, 255, 0.04); }
+    }
+
+    .badge.ok { color: var(--ok); background: var(--ok-bg); border-color: rgba(16, 185, 129, 0.28); }
+    .badge.warn { color: var(--warn); background: var(--warn-bg); border-color: rgba(245, 158, 11, 0.32); }
+    .badge.danger { color: var(--danger); background: var(--danger-bg); border-color: rgba(244, 63, 94, 0.28); }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.82fr);
       gap: 14px;
+      align-items: start;
     }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 16px;
       box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
     }
 
-    .panel.full {
-      grid-column: 1 / -1;
+    .panel.full { grid-column: 1 / -1; }
+
+    .panel-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .panel h2 {
-      margin: 0 0 12px;
+      margin: 0;
       font-size: 16px;
-      letter-spacing: 0;
+      font-weight: 850;
+      letter-spacing: -0.01em;
     }
 
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      min-height: 42px;
-      border-top: 1px solid var(--line);
-      padding-top: 12px;
-      margin-top: 12px;
-    }
-
-    .row:first-of-type {
-      border-top: 0;
-      padding-top: 0;
-      margin-top: 0;
-    }
-
-    label {
-      display: block;
+    .mini {
+      color: var(--muted);
+      font-size: 12px;
       font-weight: 650;
-      font-size: 14px;
+    }
+
+    .app-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .app-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 74px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .app-card { background: rgba(255, 255, 255, 0.035); }
+    }
+
+    .app-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--accent-soft);
+      font-size: 22px;
+    }
+
+    .app-name {
+      display: block;
+      font-weight: 850;
+      font-size: 15px;
     }
 
     .hint {
       color: var(--muted);
       display: block;
       font-size: 12px;
-      font-weight: 450;
+      font-weight: 520;
       margin-top: 2px;
+      overflow-wrap: anywhere;
     }
 
     input[type="checkbox"] {
-      width: 44px;
-      height: 24px;
+      width: 48px;
+      height: 28px;
       appearance: none;
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -153,67 +332,71 @@
 
     input[type="checkbox"]::after {
       content: "";
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: #fff;
       position: absolute;
       left: 2px;
       top: 2px;
       transition: transform 0.18s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
     }
 
-    input[type="checkbox"]:checked {
-      background: var(--accent);
+    input[type="checkbox"]:checked { background: var(--accent); }
+    input[type="checkbox"]:checked::after { transform: translateX(20px); }
+
+    input[type="number"],
+    input[type="time"] {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.36);
+      color: var(--text);
+      outline: none;
     }
 
-    input[type="checkbox"]:checked::after {
-      transform: translateX(20px);
+    @media (prefers-color-scheme: dark) {
+      input[type="number"], input[type="time"] { background: rgba(255,255,255,0.035); }
     }
+
+    input:focus-visible,
+    button:focus-visible {
+      outline: 3px solid rgba(20, 184, 166, 0.35);
+      outline-offset: 2px;
+    }
+
+    label { font-weight: 760; font-size: 14px; }
+
+    .field { margin-top: 12px; }
 
     .segmented {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 5px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-      min-height: 40px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.38);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .segmented { background: rgba(255, 255, 255, 0.035); }
     }
 
     .segmented button {
       border: 0;
-      border-right: 1px solid var(--line);
-      border-radius: 0;
+      border-radius: 999px;
       background: transparent;
-      color: var(--text);
-      font-weight: 650;
-    }
-
-    .segmented button:last-child {
-      border-right: 0;
+      color: var(--muted);
+      box-shadow: none;
     }
 
     .segmented button.active {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
       color: #fff;
-    }
-
-    input[type="number"],
-    input[type="text"],
-    input[type="time"] {
-      width: 100%;
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px 10px;
-      background: transparent;
-      color: var(--text);
-      font: inherit;
-    }
-
-    .field {
-      margin-top: 12px;
     }
 
     .time-editor {
@@ -235,65 +418,52 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 32px;
+      min-height: 34px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 4px 8px;
-      background: transparent;
+      border-radius: 999px;
+      padding: 4px 8px 4px 12px;
+      background: var(--accent-soft);
       color: var(--text);
       font-size: 13px;
-      font-weight: 650;
+      font-weight: 800;
     }
 
     .time-chip button {
+      display: grid;
+      place-items: center;
       min-height: 24px;
+      width: 24px;
       border: 0;
-      padding: 0 2px;
+      padding: 0;
       color: var(--danger);
       background: transparent;
+      box-shadow: none;
       font-size: 18px;
       line-height: 1;
+    }
+
+    .summary {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(20, 184, 166, 0.38);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 16px;
+      margin-top: 14px;
     }
 
-    button {
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px 13px;
-      color: var(--text);
-      background: var(--panel);
-      font: inherit;
-      font-weight: 650;
-    }
+    .actions button { flex: 0 1 auto; }
 
-    button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    button.primary:active {
-      background: var(--accent-strong);
-    }
-
-    button.danger {
-      color: var(--danger);
-      background: var(--danger-bg);
-      border-color: var(--danger-line);
-    }
-
-    button:disabled {
-      opacity: 0.55;
-    }
-
-    .status {
+    .status-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
@@ -301,188 +471,309 @@
 
     .metric {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      min-height: 74px;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 86px;
+      background: rgba(255, 255, 255, 0.38);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric { background: rgba(255, 255, 255, 0.035); }
     }
 
     .metric span {
       color: var(--muted);
       display: block;
       font-size: 12px;
+      font-weight: 700;
     }
 
     .metric strong {
       display: block;
-      margin-top: 6px;
+      margin-top: 7px;
       font-size: 14px;
       overflow-wrap: anywhere;
     }
 
+    .metric.ok { border-color: rgba(16, 185, 129, 0.35); }
+    .metric.warn { border-color: rgba(245, 158, 11, 0.38); }
+    .metric.danger { border-color: rgba(244, 63, 94, 0.34); }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .log-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .log-toolbar .actions { margin: 0; }
+
+    .inline-toggle {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+      min-height: 42px;
+    }
+
+    .inline-toggle input[type="checkbox"] {
+      width: 38px;
+      height: 22px;
+    }
+
+    .inline-toggle input[type="checkbox"]::after {
+      width: 16px;
+      height: 16px;
+    }
+
+    .inline-toggle input[type="checkbox"]:checked::after {
+      transform: translateX(16px);
+    }
+
     pre {
-      min-height: 240px;
-      max-height: 420px;
+      min-height: 270px;
+      max-height: 54vh;
       overflow: auto;
       margin: 0;
-      padding: 12px;
+      padding: 14px;
       background: var(--code-bg);
       color: var(--code-text);
-      border-radius: 8px;
+      border-radius: 16px;
       font-size: 12px;
-      line-height: 1.55;
+      line-height: 1.58;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
     .toast {
       position: fixed;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
-      min-height: 42px;
+      left: calc(16px + env(safe-area-inset-left, 0px));
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      min-height: 46px;
       display: none;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 10px 12px;
-      border-radius: 8px;
+      padding: 11px 14px;
+      border-radius: 999px;
       background: var(--text);
       color: var(--bg);
       font-size: 14px;
-      z-index: 10;
+      font-weight: 760;
+      z-index: 20;
+      box-shadow: var(--shadow);
     }
 
-    .toast.show {
-      display: flex;
-    }
+    .toast.show { display: flex; }
 
     .scroll-bottom {
       position: fixed;
       right: calc(18px + env(safe-area-inset-right, 0px));
-      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-      z-index: 9;
-      min-width: 76px;
+      bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+      z-index: 12;
+      min-width: 82px;
       box-shadow: var(--shadow);
     }
 
-    .scroll-bottom[hidden] {
-      display: none;
+    .scroll-bottom[hidden] { display: none; }
+
+    @media (max-width: 820px) {
+      main { padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px)); }
+      .hero { grid-template-columns: 1fr; padding: 18px; border-radius: 22px; }
+      .hero-actions { justify-content: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .actions button { flex: 1 1 130px; }
     }
 
-    @media (max-width: 720px) {
-      main {
-        padding: calc(14px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
-      }
-
-      header,
-      .row {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .grid,
-      .status {
-        grid-template-columns: 1fr;
-      }
-
-      .actions button {
-        flex: 1 1 148px;
-      }
+    @media (max-width: 430px) {
+      h1 { font-size: 24px; }
+      .logo { width: 48px; height: 48px; }
+      .status-grid, .quick-actions { grid-template-columns: 1fr; }
+      .time-editor { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <main>
-    <header>
+    <section class="hero">
       <div>
-        <h1>&#23567;&#35937;</h1>
-        <div class="subtle" id="modulePath">正在连接模块...</div>
+        <div class="brand">
+          <div class="logo" aria-hidden="true">🐘</div>
+          <div>
+            <h1>小象</h1>
+            <div class="subtitle" id="modulePath">正在连接模块...</div>
+          </div>
+        </div>
+        <div class="badges" aria-label="连接状态">
+          <span class="badge" id="bridgeBadge">bridge: 检测中</span>
+          <span class="badge" id="runBadge">scheduler: 未知</span>
+          <span class="badge" id="clockBadge">clock: 未知</span>
+        </div>
       </div>
-      <button id="refreshBtn" type="button">刷新</button>
-    </header>
+      <div class="hero-actions">
+        <button id="refreshBtn" type="button">刷新</button>
+        <button id="doctorBtn" type="button" class="ghost">Doctor</button>
+      </div>
+    </section>
 
     <section class="grid">
       <div class="panel">
-        <h2>目标应用</h2>
-        <div class="row">
-          <label for="enableWechat">
-            微信
-            <span class="hint">com.tencent.mm</span>
-          </label>
-          <input id="enableWechat" type="checkbox">
+        <div class="panel-title">
+          <h2>目标应用</h2>
+          <span class="mini">选择要定时重启的应用</span>
         </div>
-        <div class="row">
-          <label for="enableDouyin">
-            抖音
-            <span class="hint">com.ss.android.ugc.aweme</span>
+        <div class="app-list">
+          <label class="app-card" for="enableWechat">
+            <span class="app-icon" aria-hidden="true">💬</span>
+            <span>
+              <span class="app-name">微信</span>
+              <span class="hint">com.tencent.mm</span>
+            </span>
+            <input id="enableWechat" type="checkbox">
           </label>
-          <input id="enableDouyin" type="checkbox">
+          <label class="app-card" for="enableDouyin">
+            <span class="app-icon" aria-hidden="true">🎵</span>
+            <span>
+              <span class="app-name">抖音</span>
+              <span class="hint">com.ss.android.ugc.aweme</span>
+            </span>
+            <input id="enableDouyin" type="checkbox">
+          </label>
         </div>
       </div>
 
       <div class="panel">
-        <h2>定时</h2>
-        <div class="row">
-          <label for="autoEnabled">
-            自动执行
-            <span class="hint">后台调度由 service.sh 启动</span>
-          </label>
-          <input id="autoEnabled" type="checkbox">
+        <div class="panel-title">
+          <h2>定时策略</h2>
+          <span class="mini">native timerfd 调度</span>
         </div>
+        <label class="app-card" for="autoEnabled">
+          <span class="app-icon" aria-hidden="true">⚙️</span>
+          <span>
+            <span class="app-name">自动执行</span>
+            <span class="hint">由 service.sh / supervisor / autofire_timed 驱动</span>
+          </span>
+          <input id="autoEnabled" type="checkbox">
+        </label>
+
         <div class="field">
           <div class="segmented" role="tablist" aria-label="定时模式">
-            <button id="modeDaily" type="button">&#27599;&#22825;&#23450;&#28857;</button>
-            <button id="modeInterval" type="button">&#22266;&#23450;&#38388;&#38548;</button>
+            <button id="modeDaily" type="button">每天定点</button>
+            <button id="modeInterval" type="button">固定间隔</button>
           </div>
         </div>
+
         <div class="field" id="intervalField">
           <label for="intervalMinutes">间隔分钟数</label>
-          <input id="intervalMinutes" type="number" min="1" max="1440" step="1">
+          <input id="intervalMinutes" type="number" min="1" max="1440" step="1" inputmode="numeric">
+          <span class="hint">建议不要设置过短，避免频繁重启应用。</span>
         </div>
+
         <div class="field" id="dailyField">
-          <label for="dailyTimeInput">&#27599;&#22825;&#23450;&#28857;&#26102;&#38388;</label>
+          <label for="dailyTimeInput">每天定点时间</label>
           <div class="time-editor">
             <input id="dailyTimeInput" type="time" value="03:00">
-            <button id="addDailyTimeBtn" type="button">&#28155;&#21152;</button>
+            <button id="addDailyTimeBtn" type="button">添加</button>
           </div>
           <div class="time-list" id="dailyTimeList"></div>
           <input id="dailyTimes" type="hidden" value="03:00">
         </div>
+
+        <div class="summary" id="scheduleSummary">等待配置...</div>
+
         <div class="actions">
-          <button class="primary" id="saveBtn" type="button">&#20445;&#23384;&#37197;&#32622;</button>
-          <button id="resetBtn" type="button">&#24674;&#22797;&#40664;&#35748;</button>
+          <button class="primary" id="saveBtn" type="button">保存配置</button>
+          <button id="resetBtn" type="button">恢复默认</button>
         </div>
       </div>
 
       <div class="panel full">
-        <h2>状态</h2>
-        <div class="status">
-          <div class="metric">
-            <span>调度器</span>
-            <strong id="schedulerStatus">未知</strong>
+        <div class="panel-title">
+          <h2>运行状态</h2>
+          <span class="mini" id="lastUpdated">未刷新</span>
+        </div>
+        <div class="status-grid">
+          <div class="metric" id="metricSupervisor">
+            <span>Supervisor</span>
+            <strong id="supervisorStatus">未知</strong>
           </div>
-          <div class="metric">
-            <span>进程 PID</span>
-            <strong id="schedulerPid">-</strong>
+          <div class="metric" id="metricNative">
+            <span>Native daemon</span>
+            <strong id="nativeStatus">未知</strong>
           </div>
-          <div class="metric">
-            <span>native 定时器</span>
-            <strong id="timerStatus">未知</strong>
+          <div class="metric" id="metricWorker">
+            <span>Worker</span>
+            <strong id="workerStatus">未知</strong>
           </div>
-          <div class="metric">
-            <span>唤醒锁</span>
+          <div class="metric" id="metricBinary">
+            <span>二进制</span>
+            <strong id="binaryStatus">未知</strong>
+          </div>
+          <div class="metric" id="metricClock">
+            <span>Clock</span>
+            <strong id="clockStatus">未知</strong>
+          </div>
+          <div class="metric" id="metricWake">
+            <span>唤醒能力</span>
+            <strong id="wakeStatus">未知</strong>
+          </div>
+          <div class="metric" id="metricDrift">
+            <span>最近漂移</span>
+            <strong id="driftStatus">-</strong>
+          </div>
+          <div class="metric" id="metricLock">
+            <span>WakeLock</span>
             <strong id="wakeLockStatus">未知</strong>
           </div>
         </div>
       </div>
 
-      <div class="panel full" id="logPanel">
-        <h2>日志</h2>
-        <pre id="logOutput">暂无日志</pre>
-        <div class="actions">
-          <button id="refreshLogBtn" type="button">刷新日志</button>
-          <button class="danger" id="clearLogBtn" type="button">清空日志</button>
+      <div class="panel full">
+        <div class="panel-title">
+          <h2>调度器操作</h2>
+          <span class="mini">操作 native / supervisor</span>
         </div>
+        <div class="quick-actions">
+          <button id="startSchedulerBtn" type="button">启动</button>
+          <button id="reloadSchedulerBtn" type="button">热重载</button>
+          <button id="restartSchedulerBtn" type="button">重启</button>
+          <button id="stopSchedulerBtn" type="button" class="danger">停止</button>
+        </div>
+        <div class="actions">
+          <button id="versionBtn" type="button">查看二进制版本</button>
+          <button id="statusBtn" type="button">查看 scheduler status</button>
+        </div>
+      </div>
+
+      <div class="panel full" id="logPanel">
+        <div class="panel-title">
+          <h2>日志</h2>
+          <span class="mini">最近 180 行</span>
+        </div>
+        <div class="log-toolbar">
+          <label class="inline-toggle" for="autoLogRefresh">
+            <input id="autoLogRefresh" type="checkbox">
+            自动刷新
+          </label>
+          <div class="actions">
+            <button id="refreshLogBtn" type="button">刷新日志</button>
+            <button id="copyLogBtn" type="button">复制</button>
+            <button class="danger" id="clearLogBtn" type="button">清空</button>
+          </div>
+        </div>
+        <pre id="logOutput">暂无日志</pre>
       </div>
     </section>
   </main>
@@ -500,20 +791,35 @@
       mode: "daily",
       dailyTimes: ["03:00"],
       doctor: null,
+      logTimer: 0,
+      lastDoctorRaw: "",
     };
 
     function moduleRoot() {
       const path = decodeURIComponent(window.location.pathname || "");
       const marker = "/webroot/";
       const index = path.indexOf(marker);
-      if (index >= 0) {
-        return path.slice(0, index);
-      }
+      if (index >= 0) return path.slice(0, index);
       return "/data/adb/modules/autofire-app-restarter";
+    }
+
+    function moduleRoots() {
+      return [...new Set([
+        state.root,
+        moduleRoot(),
+        "/data/adb/modules/autofire-app-restarter",
+        "/data/adb/modules_update/autofire-app-restarter",
+      ].filter(Boolean))];
     }
 
     function shellQuote(value) {
       return "'" + String(value).replace(/'/g, "'\\''") + "'";
+    }
+
+    function nowText() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
     async function resolveExec() {
@@ -524,6 +830,7 @@
         if (typeof ksu.exec === "function") {
           state.bridgeName = "kernelsu";
           state.exec = (command) => ksu.exec(command);
+          updateBridgeBadge();
           return state.exec;
         }
       } catch (error) {
@@ -534,28 +841,25 @@
       for (const name of bridgeNames) {
         const bridge = window[name];
         if (!bridge || typeof bridge.exec !== "function") continue;
-
         state.bridgeName = name;
         state.exec = (command) => callInjectedExec(name, command);
+        updateBridgeBadge();
         return state.exec;
       }
 
+      updateBridgeBadge("danger", "bridge: 未检测到");
       throw new Error("No WebUI shell exec API detected; check WebUI support and root permission");
     }
 
     function callInjectedExec(name, command) {
       return new Promise((resolve, reject) => {
-        const callbackName = "autofire_exec_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const callbackName = "xiaoxiang_exec_" + Date.now() + "_" + Math.random().toString(36).slice(2);
         let finished = false;
         let timer = 0;
 
         function cleanup() {
           window.clearTimeout(timer);
-          try {
-            delete window[callbackName];
-          } catch (error) {
-            window[callbackName] = undefined;
-          }
+          try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
         }
 
         function finish(value) {
@@ -577,14 +881,11 @@
 
         try {
           const returned = window[name].exec(command, "{}", callbackName);
-          if (returned !== undefined) {
-            Promise.resolve(returned).then(finish, fail);
-          }
+          if (returned !== undefined) Promise.resolve(returned).then(finish, fail);
         } catch (callbackError) {
           cleanup();
           finished = false;
           window[callbackName] = undefined;
-
           try {
             const returned = window[name].exec(command);
             Promise.resolve(returned).then(finish, fail);
@@ -603,18 +904,12 @@
             "stdout" in parsed || "stderr" in parsed || "errno" in parsed || "code" in parsed ||
             "out" in parsed || "err" in parsed || "output" in parsed || "exitCode" in parsed ||
             "exit_code" in parsed || "status" in parsed
-          )) {
-            return normalizeExecResult(parsed);
-          }
-        } catch (error) {
-          // Raw command output does not have to be JSON.
-        }
+          )) return normalizeExecResult(parsed);
+        } catch (error) {}
         return { code: 0, stdout: result, stderr: "" };
       }
 
-      if (!result || typeof result !== "object") {
-        return { code: 0, stdout: "", stderr: "" };
-      }
+      if (!result || typeof result !== "object") return { code: 0, stdout: "", stderr: "" };
 
       const rawCode = result.errno ?? result.code ?? result.exitCode ?? result.exit_code ?? result.status;
       const stdout = result.stdout ?? result.out ?? result.output ?? result.data ?? result.result ?? "";
@@ -632,60 +927,112 @@
     async function runShell(command) {
       const exec = await resolveExec();
       const result = normalizeExecResult(await exec(command));
-      if (result.code !== 0) {
-        throw new Error(result.stderr || result.stdout || "Command failed");
-      }
+      if (result.code !== 0) throw new Error(result.stderr || result.stdout || "Command failed");
       return result.stdout || "";
     }
 
     async function moduleScript(args) {
-      const roots = [
-        state.root,
-        "/data/adb/modules/autofire-app-restarter",
-        "/data/adb/modules_update/autofire-app-restarter",
-      ];
       let lastError = "";
 
-      for (const root of [...new Set(roots.filter(Boolean))]) {
+      for (const root of moduleRoots()) {
         const script = `${root}/script/config.sh`;
         try {
           const command = "if [ -f " + shellQuote(script) + " ]; then sh " + shellQuote(script) + " " + args + "; else echo " + shellQuote("Cannot find " + script) + " >&2; exit 127; fi";
           const output = await runShell(command);
           state.root = root;
+          $("modulePath").textContent = root;
           return output;
         } catch (error) {
           lastError = error.message || String(error);
         }
       }
-
       throw new Error(lastError || "Cannot find script/config.sh");
+    }
+
+    async function schedulerScript(action) {
+      let lastError = "";
+      for (const root of moduleRoots()) {
+        const script = `${root}/script/scheduler.sh`;
+        try {
+          const command = "if [ -f " + shellQuote(script) + " ]; then sh " + shellQuote(script) + " " + shellQuote(action) + "; else echo " + shellQuote("Cannot find " + script) + " >&2; exit 127; fi";
+          const output = await runShell(command);
+          state.root = root;
+          $("modulePath").textContent = root;
+          return output;
+        } catch (error) {
+          lastError = error.message || String(error);
+        }
+      }
+      throw new Error(lastError || "Cannot find script/scheduler.sh");
+    }
+
+    async function timerBinary(args) {
+      let lastError = "";
+      for (const root of moduleRoots()) {
+        const bins = [
+          state.doctor && state.doctor.timer_path,
+          `${root}/bin/autofire_timed`,
+          `${root}/bin/autofire_timed_armeabi-v7a`,
+        ];
+        for (const bin of [...new Set(bins.filter(Boolean))]) {
+          try {
+            const command = "if [ -x " + shellQuote(bin) + " ]; then " + shellQuote(bin) + " " + args + "; else echo " + shellQuote("Cannot execute " + bin) + " >&2; exit 126; fi";
+            const output = await runShell(command);
+            state.root = root;
+            $("modulePath").textContent = root;
+            return output;
+          } catch (error) {
+            lastError = error.message || String(error);
+          }
+        }
+      }
+      throw new Error(lastError || "Cannot execute bin/autofire_timed");
     }
 
     function formatError(error) {
       return error && error.message ? error.message : String(error || "unknown error");
     }
 
+    function setClass(node, cls) {
+      node.classList.remove("ok", "warn", "danger");
+      if (cls) node.classList.add(cls);
+    }
+
+    function updateBridgeBadge(cls, text) {
+      const node = $("bridgeBadge");
+      if (!node) return;
+      node.textContent = text || (state.bridgeName ? "bridge: " + state.bridgeName : "bridge: 检测中");
+      setClass(node, cls || (state.bridgeName ? "ok" : "warn"));
+    }
+
+    function truthy(value) {
+      return value === true || value === 1 || value === "1" || value === "true" || value === "yes" || value === "running";
+    }
+
+    function pick(info, names, fallback = undefined) {
+      for (const name of names) {
+        if (info && info[name] !== undefined && info[name] !== null && info[name] !== "") return info[name];
+      }
+      return fallback;
+    }
+
+    function pidText(pid) {
+      return pid ? String(pid) : "-";
+    }
+
+    function runningText(running, pid) {
+      return truthy(running) ? (pid ? "运行中 · PID " + pid : "运行中") : "未运行";
+    }
+
+    function setMetric(id, cls) {
+      const node = $(id);
+      if (node) setClass(node, cls);
+    }
+
     function formatDoctor(raw) {
       try {
         const info = JSON.parse(raw.trim());
-        return [
-          "Doctor:",
-          "bridge=" + (state.bridgeName || "none"),
-          "module=" + (info.module_path || ""),
-          "data=" + (info.data_path || ""),
-          "config=" + (info.config_path || ""),
-          "log=" + (info.log_path || ""),
-          "script_exists=" + info.script_exists,
-          "config_exists=" + info.config_exists,
-          "log_writable=" + info.log_writable,
-          "timer_exists=" + info.timer_exists,
-          "timer_executable=" + info.timer_executable,
-          "scheduler_running=" + info.scheduler_running,
-          "scheduler_pid=" + (info.scheduler_pid || ""),
-          "wake_lock_held=" + info.wake_lock_held,
-          "id=" + (info.id || ""),
-          "sh=" + (info.sh || ""),
-        ].join("\n");
+        return JSON.stringify(info, null, 2);
       } catch (error) {
         return raw.trim() || "doctor returned empty output";
       }
@@ -693,7 +1040,7 @@
 
     async function showConnectionError(error) {
       const message = formatError(error);
-      $("modulePath").textContent = "Connection failed: " + message;
+      $("modulePath").textContent = "连接失败: " + message;
       let detail = "Connection failed: " + message;
 
       try {
@@ -705,6 +1052,7 @@
 
       $("logOutput").textContent = detail;
     }
+
     function toast(message) {
       const node = $("toast");
       node.textContent = message;
@@ -714,9 +1062,7 @@
     }
 
     function setBusy(isBusy) {
-      for (const button of document.querySelectorAll("button")) {
-        button.disabled = isBusy;
-      }
+      for (const button of document.querySelectorAll("button")) button.disabled = isBusy;
     }
 
     function applyMode(mode) {
@@ -725,6 +1071,7 @@
       $("modeDaily").classList.toggle("active", state.mode === "daily");
       $("intervalField").style.display = state.mode === "interval" ? "block" : "none";
       $("dailyField").style.display = state.mode === "daily" ? "block" : "none";
+      updateSummary();
     }
 
     function normalizeDailyTimes(value) {
@@ -733,6 +1080,7 @@
         .split(/[\uFF0C,;\uFF1B|\s]+/)
         .map((item) => item.trim())
         .filter((item) => /^([01]\d|2[0-3]):[0-5]\d$/.test(item))
+        .sort()
         .filter((item) => {
           if (seen.has(item)) return false;
           seen.add(item);
@@ -753,8 +1101,8 @@
 
         const remove = document.createElement("button");
         remove.type = "button";
-        remove.textContent = "\u00d7";
-        remove.setAttribute("aria-label", "\u5220\u9664 " + time);
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "删除 " + time);
         remove.addEventListener("click", () => {
           state.dailyTimes = state.dailyTimes.filter((item) => item !== time);
           if (!state.dailyTimes.length) state.dailyTimes = ["03:00"];
@@ -764,6 +1112,7 @@
         chip.appendChild(remove);
         list.appendChild(chip);
       }
+      updateSummary();
     }
 
     function addDailyTime() {
@@ -772,28 +1121,108 @@
       renderDailyTimes();
     }
 
-    function applyDoctor(info) {
-      state.doctor = info;
-      $("schedulerStatus").textContent = info.scheduler_running ? "运行中" : "未运行";
-      $("schedulerPid").textContent = info.scheduler_pid || "-";
-      if (!info.timer_exists) {
-        $("timerStatus").textContent = "不存在";
-      } else if (!info.timer_executable) {
-        $("timerStatus").textContent = "存在但不可执行";
-      } else {
-        $("timerStatus").textContent = "已就绪";
-      }
-      $("wakeLockStatus").textContent = info.wake_lock_held ? "已持有" : "未持有或不可用";
+    function appSummary() {
+      const apps = [];
+      if ($("enableWechat").checked) apps.push("微信");
+      if ($("enableDouyin").checked) apps.push("抖音");
+      return apps.length ? apps.join("、") : "未选择应用";
     }
 
-    async function refreshDoctor() {
+    function updateSummary() {
+      const enabled = $("autoEnabled").checked;
+      const apps = appSummary();
+      const schedule = state.mode === "daily"
+        ? "每天 " + state.dailyTimes.join("、")
+        : "每 " + Math.max(1, Math.min(1440, Number($("intervalMinutes").value || 60))) + " 分钟";
+      $("scheduleSummary").textContent = (enabled ? "已启用" : "未启用") + " · " + apps + " · " + schedule;
+    }
+
+    function applyDoctor(info) {
+      state.doctor = info;
+      state.lastDoctorRaw = JSON.stringify(info, null, 2);
+
+      const schedulerRunning = pick(info, ["scheduler_running", "native_running", "timer_running"], false);
+      const schedulerPid = pick(info, ["scheduler_pid", "native_pid", "timer_pid"], "");
+      const supervisorRunning = pick(info, ["supervisor_running"], undefined);
+      const supervisorPid = pick(info, ["supervisor_pid"], "");
+      const nativeRunning = pick(info, ["native_running", "scheduler_running"], schedulerRunning);
+      const nativePid = pick(info, ["native_pid", "scheduler_pid"], schedulerPid);
+      const activeWorkers = pick(info, ["active_workers", "worker_active", "workers_active"], "0");
+      const pendingWorkers = pick(info, ["pending_workers", "ready_queue", "worker_pending"], "0");
+      const selectedClock = pick(info, ["selectedClock", "selected_clock", "clock"], "未知");
+      const wakeCapable = pick(info, ["wakeCapable", "wake_capable"], undefined);
+      const suspendAware = pick(info, ["suspendAware", "suspend_aware"], undefined);
+      const drift = pick(info, ["last_drift_ms", "lastDriftMs", "drift_ms"], "-");
+      const version = pick(info, ["timer_version", "scheduler_version", "version"], "");
+      const arch = pick(info, ["timer_arch", "scheduler_arch", "arch"], "");
+      const timerExists = pick(info, ["timer_exists"], true);
+      const timerExec = pick(info, ["timer_executable"], true);
+      const wakeLockHeld = pick(info, ["wake_lock_held", "wakelock_held"], undefined);
+
+      $("supervisorStatus").textContent = supervisorRunning === undefined
+        ? "未上报"
+        : runningText(supervisorRunning, supervisorPid);
+      setMetric("metricSupervisor", supervisorRunning === undefined ? "warn" : truthy(supervisorRunning) ? "ok" : "danger");
+
+      $("nativeStatus").textContent = runningText(nativeRunning, nativePid);
+      setMetric("metricNative", truthy(nativeRunning) ? "ok" : "danger");
+
+      $("workerStatus").textContent = "active " + activeWorkers + " · pending " + pendingWorkers;
+      setMetric("metricWorker", Number(activeWorkers) > 0 ? "warn" : "ok");
+
+      let binary = "未知";
+      let binaryCls = "warn";
+      if (!truthy(timerExists)) {
+        binary = "不存在";
+        binaryCls = "danger";
+      } else if (!truthy(timerExec)) {
+        binary = "不可执行";
+        binaryCls = "danger";
+      } else if (version || arch) {
+        binary = [version, arch].filter(Boolean).join(" · ");
+        binaryCls = arch && String(arch).includes("timerfd_epoll_eventfd_heap") ? "ok" : "warn";
+      } else {
+        binary = "可执行 · 未上报版本";
+      }
+      $("binaryStatus").textContent = binary;
+      setMetric("metricBinary", binaryCls);
+
+      $("clockStatus").textContent = String(selectedClock);
+      setMetric("metricClock", String(selectedClock).includes("ALARM") ? "ok" : String(selectedClock).includes("BOOT") ? "warn" : "danger");
+
+      const wakeParts = [];
+      if (wakeCapable !== undefined) wakeParts.push("wake=" + (truthy(wakeCapable) ? "是" : "否"));
+      if (suspendAware !== undefined) wakeParts.push("suspend=" + (truthy(suspendAware) ? "是" : "否"));
+      $("wakeStatus").textContent = wakeParts.length ? wakeParts.join(" · ") : "未上报";
+      setMetric("metricWake", truthy(wakeCapable) ? "ok" : truthy(suspendAware) ? "warn" : "danger");
+
+      $("driftStatus").textContent = drift === "-" ? "-" : String(drift) + " ms";
+      setMetric("metricDrift", drift === "-" ? "warn" : Math.abs(Number(drift)) > 60000 ? "warn" : "ok");
+
+      $("wakeLockStatus").textContent = wakeLockHeld === undefined ? "未上报" : truthy(wakeLockHeld) ? "当前持有" : "未持有";
+      setMetric("metricLock", truthy(wakeLockHeld) ? "warn" : "ok");
+
+      $("runBadge").textContent = truthy(schedulerRunning) ? "scheduler: 运行中" : "scheduler: 未运行";
+      setClass($("runBadge"), truthy(schedulerRunning) ? "ok" : "danger");
+
+      $("clockBadge").textContent = "clock: " + selectedClock;
+      setClass($("clockBadge"), String(selectedClock).includes("ALARM") ? "ok" : String(selectedClock).includes("BOOT") ? "warn" : "danger");
+
+      $("lastUpdated").textContent = "刷新于 " + nowText();
+      $("modulePath").textContent = pick(info, ["module_path"], state.root) || state.root;
+      updateBridgeBadge();
+    }
+
+    async function refreshDoctor(showRaw = false) {
       const raw = await moduleScript("doctor");
       const text = raw.trim();
       if (!text) throw new Error("No JSON output from doctor");
       try {
-        applyDoctor(JSON.parse(text));
+        const info = JSON.parse(text);
+        applyDoctor(info);
+        if (showRaw) $("logOutput").textContent = JSON.stringify(info, null, 2);
       } catch (error) {
-        throw new Error("doctor JSON parse failed: " + text.slice(0, 180));
+        throw new Error("doctor JSON parse failed: " + text.slice(0, 240));
       }
     }
 
@@ -801,7 +1230,7 @@
       const node = $("scrollBottomBtn");
       const doc = document.documentElement;
       const bottomGap = doc.scrollHeight - (window.scrollY + window.innerHeight);
-      node.hidden = bottomGap < 120;
+      node.hidden = bottomGap < 140;
     }
 
     function applyConfig(config) {
@@ -811,9 +1240,10 @@
       $("intervalMinutes").value = config.interval_minutes || 60;
       state.dailyTimes = normalizeDailyTimes(config.daily_times || "03:00");
       $("dailyTimeInput").value = state.dailyTimes[0] || "03:00";
-      $("modulePath").textContent = config.log_path || state.root;
+      $("modulePath").textContent = config.module_path || config.log_path || state.root;
       renderDailyTimes();
       applyMode(config.schedule_mode || "daily");
+      updateSummary();
     }
 
     function readFormArgs() {
@@ -830,17 +1260,23 @@
       return args.map(shellQuote).join(" ");
     }
 
+    function validateBeforeSave() {
+      if ($("autoEnabled").checked && !$("enableWechat").checked && !$("enableDouyin").checked) {
+        return window.confirm("自动执行已开启，但没有选择微信或抖音。仍然保存吗？");
+      }
+      if (state.mode === "interval" && Number($("intervalMinutes").value || 0) < 1) {
+        toast("间隔分钟数不能小于 1");
+        return false;
+      }
+      return true;
+    }
+
     async function loadConfig() {
       const raw = await moduleScript("get-json");
       const text = raw.trim();
-      if (!text) {
-        throw new Error("No JSON output from config script; reboot the module/device and try again");
-      }
-      try {
-        applyConfig(JSON.parse(text));
-      } catch (error) {
-        throw new Error("config.sh JSON parse failed: " + text.slice(0, 180));
-      }
+      if (!text) throw new Error("No JSON output from config script; reboot the module/device and try again");
+      try { applyConfig(JSON.parse(text)); }
+      catch (error) { throw new Error("config.sh JSON parse failed: " + text.slice(0, 240)); }
     }
 
     async function refreshLog() {
@@ -858,18 +1294,56 @@
         toast(formatError(error));
       } finally {
         setBusy(false);
+        updateScrollBottomButton();
       }
+    }
+
+    async function doSchedulerAction(action, okMessage, confirmMessage) {
+      if (confirmMessage && !window.confirm(confirmMessage)) return;
+      await withBusy(async () => {
+        const output = await schedulerScript(action);
+        if (output.trim()) $("logOutput").textContent = output.trim();
+        await refreshDoctor();
+        await refreshLog();
+      }, okMessage);
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+
+    function setAutoLogRefresh(enabled) {
+      window.clearInterval(state.logTimer);
+      state.logTimer = 0;
+      if (!enabled) return;
+      state.logTimer = window.setInterval(() => {
+        refreshLog().catch(() => {});
+        refreshDoctor().catch(() => {});
+      }, 10000);
     }
 
     $("modeDaily").addEventListener("click", () => applyMode("daily"));
     $("modeInterval").addEventListener("click", () => applyMode("interval"));
     $("addDailyTimeBtn").addEventListener("click", addDailyTime);
     $("dailyTimeInput").addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        addDailyTime();
-      }
+      if (event.key === "Enter") { event.preventDefault(); addDailyTime(); }
     });
+
+    for (const id of ["enableWechat", "enableDouyin", "autoEnabled", "intervalMinutes"]) {
+      $(id).addEventListener("input", updateSummary);
+      $(id).addEventListener("change", updateSummary);
+    }
 
     $("refreshBtn").addEventListener("click", () => withBusy(async () => {
       await loadConfig();
@@ -877,17 +1351,19 @@
       await refreshLog();
     }, "已刷新"));
 
+    $("doctorBtn").addEventListener("click", () => withBusy(async () => refreshDoctor(true), "Doctor 已刷新"));
     $("refreshLogBtn").addEventListener("click", () => withBusy(refreshLog, "日志已刷新"));
 
     $("saveBtn").addEventListener("click", () => withBusy(async () => {
+      if (!validateBeforeSave()) return;
       const raw = await moduleScript(`save ${readFormArgs()}`);
       applyConfig(JSON.parse(raw.trim()));
       await refreshDoctor();
       await refreshLog();
     }, "配置已保存"));
 
-
     $("resetBtn").addEventListener("click", () => withBusy(async () => {
+      if (!window.confirm("恢复默认配置？")) return;
       const raw = await moduleScript("defaults");
       applyConfig(JSON.parse(raw.trim()));
       await refreshDoctor();
@@ -895,9 +1371,34 @@
     }, "已恢复默认"));
 
     $("clearLogBtn").addEventListener("click", () => withBusy(async () => {
+      if (!window.confirm("确认清空日志？")) return;
       await moduleScript("clear-log");
       await refreshLog();
     }, "日志已清空"));
+
+    $("copyLogBtn").addEventListener("click", () => withBusy(async () => {
+      await copyText($("logOutput").textContent || "");
+    }, "日志已复制"));
+
+    $("startSchedulerBtn").addEventListener("click", () => doSchedulerAction("start", "调度器已启动"));
+    $("reloadSchedulerBtn").addEventListener("click", () => doSchedulerAction("reload", "已热重载"));
+    $("restartSchedulerBtn").addEventListener("click", () => doSchedulerAction("restart", "调度器已重启", "确认重启调度器？"));
+    $("stopSchedulerBtn").addEventListener("click", () => doSchedulerAction("stop", "调度器已停止", "停止后将不再自动重启微信/抖音，确认停止？"));
+
+    $("versionBtn").addEventListener("click", () => withBusy(async () => {
+      $("logOutput").textContent = (await timerBinary("--version")).trim() || "无版本输出";
+    }, "版本已读取"));
+
+    $("statusBtn").addEventListener("click", () => withBusy(async () => {
+      const out = await schedulerScript("status");
+      $("logOutput").textContent = out.trim() || "status 无输出";
+      await refreshDoctor();
+    }, "状态已读取"));
+
+    $("autoLogRefresh").addEventListener("change", (event) => {
+      setAutoLogRefresh(event.target.checked);
+      toast(event.target.checked ? "已开启自动刷新" : "已关闭自动刷新");
+    });
 
     $("scrollBottomBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
