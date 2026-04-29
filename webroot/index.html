@@ -477,28 +477,69 @@
       return state.exec;
     }
 
-    async function runShell(command) {
-      const exec = await resolveExec();
-      let result = await exec(command);
-
+    function normalizeExecResult(result) {
       if (typeof result === "string") {
         try {
-          result = JSON.parse(result);
+          const parsed = JSON.parse(result);
+          if (parsed && typeof parsed === "object" && (
+            "stdout" in parsed || "stderr" in parsed || "errno" in parsed || "code" in parsed ||
+            "out" in parsed || "err" in parsed || "output" in parsed || "exitCode" in parsed ||
+            "exit_code" in parsed || "status" in parsed
+          )) {
+            return normalizeExecResult(parsed);
+          }
         } catch (error) {
-          result = { errno: 0, stdout: result, stderr: "" };
+          // Raw command output does not have to be JSON.
         }
+        return { code: 0, stdout: result, stderr: "" };
       }
 
-      const code = result.errno ?? result.code ?? 0;
-      if (code !== 0) {
-        throw new Error(result.stderr || result.stdout || "命令执行失败");
+      if (!result || typeof result !== "object") {
+        return { code: 0, stdout: "", stderr: "" };
+      }
+
+      const rawCode = result.errno ?? result.code ?? result.exitCode ?? result.exit_code ?? result.status;
+      const stdout = result.stdout ?? result.out ?? result.output ?? result.data ?? result.result ?? "";
+      const stderr = result.stderr ?? result.err ?? result.error ?? "";
+      const fallbackCode = stderr ? 1 : 0;
+      const code = Number(rawCode ?? fallbackCode);
+
+      return {
+        code: Number.isFinite(code) ? code : fallbackCode,
+        stdout: typeof stdout === "string" ? stdout : JSON.stringify(stdout ?? ""),
+        stderr: typeof stderr === "string" ? stderr : JSON.stringify(stderr ?? ""),
+      };
+    }
+
+    async function runShell(command) {
+      const exec = await resolveExec();
+      const result = normalizeExecResult(await exec(command));
+      if (result.code !== 0) {
+        throw new Error(result.stderr || result.stdout || "Command failed");
       }
       return result.stdout || "";
     }
 
     async function moduleScript(args) {
-      const script = `${state.root}/script/config.sh`;
-      return runShell(`sh ${shellQuote(script)} ${args}`);
+      const roots = [
+        state.root,
+        "/data/adb/modules/autofire-app-restarter",
+        "/data/adb/modules_update/autofire-app-restarter",
+      ];
+      let lastError = "";
+
+      for (const root of [...new Set(roots.filter(Boolean))]) {
+        const script = `${root}/script/config.sh`;
+        try {
+          const output = await runShell(`[ -f ${shellQuote(script)} ] && sh ${shellQuote(script)} ${args}`);
+          state.root = root;
+          return output;
+        } catch (error) {
+          lastError = error.message || String(error);
+        }
+      }
+
+      throw new Error(lastError || "Cannot find script/config.sh");
     }
 
     function toast(message) {
@@ -552,7 +593,11 @@
 
     async function loadConfig() {
       const raw = await moduleScript("get-json");
-      applyConfig(JSON.parse(raw));
+      const text = raw.trim();
+      if (!text) {
+        throw new Error("No JSON output from config script; reboot the module/device and try again");
+      }
+      applyConfig(JSON.parse(text));
     }
 
     async function refreshLog() {
@@ -584,7 +629,7 @@
 
     $("saveBtn").addEventListener("click", () => withBusy(async () => {
       const raw = await moduleScript(`save ${readFormArgs()}`);
-      applyConfig(JSON.parse(raw));
+      applyConfig(JSON.parse(raw.trim()));
       await refreshLog();
     }, "配置已保存"));
 
@@ -596,7 +641,7 @@
 
     $("resetBtn").addEventListener("click", () => withBusy(async () => {
       const raw = await moduleScript("defaults");
-      applyConfig(JSON.parse(raw));
+      applyConfig(JSON.parse(raw.trim()));
       await refreshLog();
     }, "已恢复默认"));
 

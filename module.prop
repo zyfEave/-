@@ -1,7 +1,7 @@
 id=autofire-app-restarter
 name=小象
-version=v1.2
-versionCode=3
+version=v1.3
+versionCode=4
 author=帆帆
 description=只有你自己懂
 updateJson=https://raw.githubusercontent.com/zyfEave/-/main/update.json
