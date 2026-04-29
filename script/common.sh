@@ -12,6 +12,7 @@ esac
 
 MODULE_ID="autofire-app-restarter"
 WAKE_LOCK_NAME="${WAKE_LOCK_NAME:-autofire_scheduler}"
+BOOT_GRACE_SECONDS="${BOOT_GRACE_SECONDS:-180}"
 
 set_data_paths() {
   DATA_DIR=$1
@@ -148,7 +149,7 @@ normalize_daily_times() {
 sanitize_config() {
   ENABLE_WECHAT=$(normalize_bool "$ENABLE_WECHAT" 1)
   ENABLE_DOUYIN=$(normalize_bool "$ENABLE_DOUYIN" 1)
-  AUTO_ENABLED=$(normalize_bool "$AUTO_ENABLED" 1)
+  AUTO_ENABLED=$(normalize_bool "$AUTO_ENABLED" 0)
   SCHEDULE_MODE=$(normalize_mode "$SCHEDULE_MODE")
   INTERVAL_MINUTES=$(normalize_positive_int "$INTERVAL_MINUTES" 60 1 1440)
   DAILY_TIMES=$(normalize_daily_times "$DAILY_TIMES")
@@ -174,7 +175,7 @@ EOF
 write_default_config() {
   ENABLE_WECHAT=1
   ENABLE_DOUYIN=1
-  AUTO_ENABLED=1
+  AUTO_ENABLED=0
   SCHEDULE_MODE="daily"
   INTERVAL_MINUTES=60
   DAILY_TIMES="03:00"
@@ -191,7 +192,7 @@ load_config() {
 
   ENABLE_WECHAT=1
   ENABLE_DOUYIN=1
-  AUTO_ENABLED=1
+  AUTO_ENABLED=0
   SCHEDULE_MODE="daily"
   INTERVAL_MINUTES=60
   DAILY_TIMES="03:00"

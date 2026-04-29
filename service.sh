@@ -28,6 +28,13 @@ if is_module_disabled; then
   exit 0
 fi
 
+load_config
+
+if [ "$AUTO_ENABLED" != "1" ]; then
+  log_msg "INFO" "scheduler not started because auto execution is disabled"
+  exit 0
+fi
+
 if start_scheduler_if_needed; then
   log_msg "INFO" "scheduler launch requested"
 else

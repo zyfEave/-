@@ -19,6 +19,8 @@ echo $$ > "$PID_FILE"
 
 WAKE_LOCK_HELD=0
 WAKE_LOCK_WARNED=0
+SCHEDULER_START_EPOCH=$(date +%s)
+BOOT_GRACE_LOGGED=0
 
 ensure_scheduler_wake_lock() {
   if [ "$WAKE_LOCK_HELD" = "1" ]; then
@@ -56,6 +58,27 @@ trap cleanup_scheduler EXIT INT TERM
 
 log_msg "INFO" "scheduler started"
 
+
+in_boot_grace() {
+  _now_epoch=$(date +%s)
+  _elapsed=$((_now_epoch - SCHEDULER_START_EPOCH))
+  [ "$_elapsed" -lt "$BOOT_GRACE_SECONDS" ]
+}
+
+skip_boot_grace_if_needed() {
+  if in_boot_grace; then
+    write_state_value last_interval_epoch "$(date +%s)"
+    if [ "$BOOT_GRACE_LOGGED" != "1" ]; then
+      BOOT_GRACE_LOGGED=1
+      log_msg "INFO" "scheduler boot grace active for ${BOOT_GRACE_SECONDS}s; no task will run immediately after boot"
+    fi
+    return 0
+  fi
+
+  return 1
+}
+
+
 run_interval_schedule() {
   _now_epoch=$(date +%s)
   _last_epoch=$(read_state_value last_interval_epoch)
@@ -65,6 +88,12 @@ run_interval_schedule() {
       return
       ;;
   esac
+
+  if [ "$_last_epoch" -lt "$SCHEDULER_START_EPOCH" ]; then
+    write_state_value last_interval_epoch "$_now_epoch"
+    log_msg "INFO" "interval schedule baseline reset after scheduler start"
+    return
+  fi
 
   _period=$((INTERVAL_MINUTES * 60))
   _elapsed=$((_now_epoch - _last_epoch))
@@ -117,6 +146,11 @@ while ! is_module_disabled; do
 
   if [ "$AUTO_ENABLED" = "1" ]; then
     ensure_scheduler_wake_lock
+    if skip_boot_grace_if_needed; then
+      sleep 60
+      continue
+    fi
+
     case "$SCHEDULE_MODE" in
       daily) run_daily_schedule ;;
       *) run_interval_schedule ;;
