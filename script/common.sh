@@ -11,21 +11,45 @@ case "$SCRIPT_DIR" in
 esac
 
 MODULE_ID="autofire-app-restarter"
-CONFIG_DIR="$MODDIR/config"
-LOG_DIR="$MODDIR/logs"
-STATE_DIR="$MODDIR/state"
+DATA_DIR="${AUTOFIRE_DATA_DIR:-/data/adb/$MODULE_ID}"
+CONFIG_DIR="$DATA_DIR/config"
+LOG_DIR="$DATA_DIR/logs"
+STATE_DIR="$DATA_DIR/state"
 CONFIG_FILE="$CONFIG_DIR/autofire.conf"
 LOG_FILE="$LOG_DIR/autofire.log"
 STATE_FILE="$STATE_DIR/scheduler.state"
 PID_FILE="$STATE_DIR/scheduler.pid"
 RUN_LOCK_DIR="$STATE_DIR/run.lock"
 SCHEDULER_LOCK_DIR="$STATE_DIR/scheduler.lock"
+LEGACY_CONFIG_FILE="$MODDIR/config/autofire.conf"
+LEGACY_LOG_FILE="$MODDIR/logs/autofire.log"
+LEGACY_STATE_DIR="$MODDIR/state"
 
 WECHAT_PKG="com.tencent.mm"
 DOUYIN_PKG="com.ss.android.ugc.aweme"
 
 ensure_dirs() {
   mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR"
+
+  if [ ! -f "$CONFIG_FILE" ] && [ -f "$LEGACY_CONFIG_FILE" ]; then
+    cp "$LEGACY_CONFIG_FILE" "$CONFIG_FILE" 2>/dev/null
+  fi
+
+  if [ ! -f "$LOG_FILE" ]; then
+    if [ -f "$LEGACY_LOG_FILE" ]; then
+      cp "$LEGACY_LOG_FILE" "$LOG_FILE" 2>/dev/null || : > "$LOG_FILE"
+    else
+      : > "$LOG_FILE"
+    fi
+  fi
+
+  if [ -d "$LEGACY_STATE_DIR" ]; then
+    for _state_item in last_run last_result last_source last_interval_epoch daily_runs.txt; do
+      if [ ! -f "$STATE_DIR/$_state_item" ] && [ -f "$LEGACY_STATE_DIR/$_state_item" ]; then
+        cp "$LEGACY_STATE_DIR/$_state_item" "$STATE_DIR/$_state_item" 2>/dev/null
+      fi
+    done
+  fi
 }
 
 is_module_disabled() {
@@ -131,7 +155,8 @@ sanitize_config() {
 write_config() {
   ensure_dirs
   sanitize_config
-  cat > "$CONFIG_FILE" <<EOF
+  _tmp_config="$CONFIG_FILE.tmp.$$"
+  cat > "$_tmp_config" <<EOF
 ENABLE_WECHAT=$ENABLE_WECHAT
 ENABLE_DOUYIN=$ENABLE_DOUYIN
 AUTO_ENABLED=$AUTO_ENABLED
@@ -140,6 +165,7 @@ INTERVAL_MINUTES=$INTERVAL_MINUTES
 DAILY_TIMES=$DAILY_TIMES
 APP_SETTLE_SECONDS=$APP_SETTLE_SECONDS
 EOF
+  mv "$_tmp_config" "$CONFIG_FILE"
 }
 
 write_default_config() {
@@ -179,8 +205,8 @@ trim_log() {
     ''|*[!0-9]*) return ;;
   esac
 
-  if [ "$_line_count" -gt 800 ]; then
-    tail -n 500 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
+  if [ "$_line_count" -gt 5000 ]; then
+    tail -n 3000 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
   fi
 }
 
