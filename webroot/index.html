@@ -455,10 +455,11 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
+    import { exec as ksuExec } from "kernelsu";
+
     const $ = (id) => document.getElementById(id);
 
     const state = {
-      exec: null,
       root: moduleRoot(),
       mode: "daily",
       dailyTimes: ["03:00"],
@@ -479,32 +480,7 @@
     }
 
     async function resolveExec() {
-      if (state.exec) return state.exec;
-
-      try {
-        const ksu = await import("kernelsu");
-        if (typeof ksu.exec === "function") {
-          state.exec = (command) => ksu.exec(command);
-          return state.exec;
-        }
-      } catch (error) {
-        // Fall through to injected globals used by compatible managers.
-      }
-
-      const bridges = [
-        window.ksu,
-        window.KernelSU,
-        window.apatch,
-        window.APatch,
-      ];
-      const bridge = bridges.find((candidate) => candidate && typeof candidate.exec === "function");
-
-      if (!bridge) {
-        throw new Error("当前 WebUI 环境没有提供 shell exec API");
-      }
-
-      state.exec = (command) => bridge.exec(command);
-      return state.exec;
+      return (command) => ksuExec(command);
     }
 
     function normalizeExecResult(result) {
@@ -561,7 +537,8 @@
       for (const root of [...new Set(roots.filter(Boolean))]) {
         const script = `${root}/script/config.sh`;
         try {
-          const output = await runShell(`[ -f ${shellQuote(script)} ] && sh ${shellQuote(script)} ${args}`);
+          const command = "if [ -f " + shellQuote(script) + " ]; then sh " + shellQuote(script) + " " + args + "; else echo " + shellQuote("Cannot find " + script) + " >&2; exit 127; fi";
+          const output = await runShell(command);
           state.root = root;
           return output;
         } catch (error) {

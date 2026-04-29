@@ -46,6 +46,7 @@ save_config_from_args() {
 
   write_config
   log_msg "INFO" "configuration saved"
+  start_scheduler_after_config_save
   print_config_json
 }
 
@@ -66,6 +67,17 @@ clear_log() {
   : > "$LOG_FILE"
 }
 
+start_scheduler_after_config_save() {
+  if [ "$AUTO_ENABLED" = "1" ]; then
+    if start_scheduler_if_needed; then
+      log_msg "INFO" "scheduler launch checked after configuration save"
+    else
+      log_msg "WARN" "scheduler launch failed after configuration save"
+    fi
+  fi
+}
+
+
 case "$1" in
   get-json)
     print_config_json
@@ -82,6 +94,7 @@ case "$1" in
     ;;
   defaults)
     write_default_config
+    start_scheduler_after_config_save
     log_msg "INFO" "configuration reset to defaults"
     print_config_json
     ;;

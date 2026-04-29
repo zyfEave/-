@@ -28,5 +28,8 @@ if is_module_disabled; then
   exit 0
 fi
 
-nohup sh "$MODDIR/script/scheduler.sh" >/dev/null 2>&1 &
-log_msg "INFO" "scheduler launch requested"
+if start_scheduler_if_needed; then
+  log_msg "INFO" "scheduler launch requested"
+else
+  log_msg "ERROR" "scheduler launch failed"
+fi

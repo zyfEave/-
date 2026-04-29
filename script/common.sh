@@ -11,6 +11,7 @@ case "$SCRIPT_DIR" in
 esac
 
 MODULE_ID="autofire-app-restarter"
+WAKE_LOCK_NAME="${WAKE_LOCK_NAME:-autofire_scheduler}"
 
 set_data_paths() {
   DATA_DIR=$1
@@ -264,4 +265,47 @@ sleep_device() {
 
 home_device() {
   send_keyevent KEYCODE_HOME 3
+}
+
+acquire_wake_lock() {
+  if [ -w /sys/power/wake_lock ]; then
+    echo "$WAKE_LOCK_NAME" > /sys/power/wake_lock 2>/dev/null
+    return $?
+  fi
+
+  return 1
+}
+
+release_wake_lock() {
+  if [ -w /sys/power/wake_unlock ]; then
+    echo "$WAKE_LOCK_NAME" > /sys/power/wake_unlock 2>/dev/null
+    return $?
+  fi
+
+  return 1
+}
+
+scheduler_is_running() {
+  [ -f "$PID_FILE" ] || return 1
+  _scheduler_pid=$(sed -n '1p' "$PID_FILE" 2>/dev/null)
+  case "$_scheduler_pid" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+
+  kill -0 "$_scheduler_pid" 2>/dev/null
+}
+
+start_scheduler_if_needed() {
+  ensure_dirs
+
+  if scheduler_is_running; then
+    return 0
+  fi
+
+  if [ ! -f "$MODDIR/script/scheduler.sh" ]; then
+    return 1
+  fi
+
+  nohup sh "$MODDIR/script/scheduler.sh" >/dev/null 2>&1 &
+  return 0
 }

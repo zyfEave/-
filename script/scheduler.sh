@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd "${0%/*}" 2>/dev/null && pwd)
 ensure_dirs
 
 if ! mkdir "$SCHEDULER_LOCK_DIR" 2>/dev/null; then
-  if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
+  if scheduler_is_running; then
     log_msg "INFO" "scheduler already running"
     exit 0
   fi
@@ -17,7 +17,38 @@ fi
 
 echo $$ > "$PID_FILE"
 
+WAKE_LOCK_HELD=0
+WAKE_LOCK_WARNED=0
+
+ensure_scheduler_wake_lock() {
+  if [ "$WAKE_LOCK_HELD" = "1" ]; then
+    return
+  fi
+
+  if acquire_wake_lock; then
+    WAKE_LOCK_HELD=1
+    WAKE_LOCK_WARNED=0
+    log_msg "INFO" "scheduler wake lock acquired; screen-off timing can continue"
+  elif [ "$WAKE_LOCK_WARNED" != "1" ]; then
+    WAKE_LOCK_WARNED=1
+    log_msg "WARN" "scheduler wake lock unavailable; screen-off schedules may be delayed by deep sleep"
+  fi
+}
+
+release_scheduler_wake_lock() {
+  if [ "$WAKE_LOCK_HELD" = "1" ]; then
+    if release_wake_lock; then
+      log_msg "INFO" "scheduler wake lock released"
+    else
+      log_msg "WARN" "scheduler wake lock release failed"
+    fi
+  fi
+
+  WAKE_LOCK_HELD=0
+}
+
 cleanup_scheduler() {
+  release_scheduler_wake_lock
   rm -f "$PID_FILE"
   rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
 }
@@ -85,10 +116,13 @@ while ! is_module_disabled; do
   load_config
 
   if [ "$AUTO_ENABLED" = "1" ]; then
+    ensure_scheduler_wake_lock
     case "$SCHEDULE_MODE" in
       daily) run_daily_schedule ;;
       *) run_interval_schedule ;;
     esac
+  else
+    release_scheduler_wake_lock
   fi
 
   sleep 60
