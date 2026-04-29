@@ -4,3 +4,4 @@ version=v1.1
 versionCode=2
 author=帆帆
 description=定时杀死并重新启动微信和抖音，支持 KSU/APatch WebUI 与 Action 按钮
+updateJson=https://raw.githubusercontent.com/zyfEave/-/main/update.json
