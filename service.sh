@@ -28,6 +28,7 @@ while [ "$(getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
 done
 
 if [ "$(getprop sys.boot_completed 2>/dev/null)" = "1" ]; then
+  date +%s > "$STATE_DIR/boot_completed_epoch" 2>/dev/null
   sleep 10
 fi
 

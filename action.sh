@@ -2,5 +2,5 @@
 
 MODDIR=${0%/*}
 
-echo "AutoFire: screen will turn off, task starts in 20 seconds."
+echo "AutoFire: task starts in 20 seconds; screen-off is skipped during boot grace."
 sh "$MODDIR/script/run_task.sh" action 20

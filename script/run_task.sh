@@ -7,6 +7,7 @@ SOURCE=${1:-manual}
 DELAY_SECONDS=${2:-0}
 COMMAND_TIMEOUT_SECONDS=${COMMAND_TIMEOUT_SECONDS:-12}
 BOOT_WAIT_SECONDS=${BOOT_WAIT_SECONDS:-120}
+SCREEN_OFF_BOOT_GRACE_SECONDS=${SCREEN_OFF_BOOT_GRACE_SECONDS:-300}
 
 case "$DELAY_SECONDS" in
   ''|*[!0-9]*) DELAY_SECONDS=0 ;;
@@ -149,6 +150,34 @@ trap 'cleanup_run_lock; exit 130' INT
 trap 'cleanup_run_lock; exit 143' TERM
 trap 'cleanup_run_lock; exit 129' HUP
 
+record_boot_completed_epoch_if_needed() {
+  _now=$(date +%s)
+  _stored=$(read_state_value boot_completed_epoch)
+  _should_write=0
+
+  case "$_stored" in
+    ''|*[!0-9]*) _should_write=1 ;;
+  esac
+
+  if [ "$_should_write" = "0" ] && [ -r /proc/uptime ]; then
+    read _uptime _rest < /proc/uptime
+    _uptime=${_uptime%.*}
+    case "$_uptime" in
+      ''|*[!0-9]*) ;;
+      *)
+        _boot_start=$((_now - _uptime))
+        if [ "$_stored" -lt "$_boot_start" ]; then
+          _should_write=1
+        fi
+        ;;
+    esac
+  fi
+
+  if [ "$_should_write" = "1" ]; then
+    echo "$_now" > "$STATE_DIR/boot_completed_epoch" 2>/dev/null
+  fi
+}
+
 wait_boot_completed() {
   _waited=0
   while [ "$(getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
@@ -160,6 +189,8 @@ wait_boot_completed() {
     sleep 5
     _waited=$((_waited + 5))
   done
+
+  record_boot_completed_epoch_if_needed
 }
 
 wait_boot_completed
@@ -205,8 +236,55 @@ send_keyevent_timeout() {
   run_quiet_with_timeout 6 input keyevent "$_name" || run_quiet_with_timeout 6 input keyevent "$_code"
 }
 
+boot_age_seconds() {
+  _now=$(date +%s)
+  _boot_epoch=$(read_state_value boot_completed_epoch)
+  case "$_boot_epoch" in
+    ''|*[!0-9]*) ;;
+    *)
+      if [ "$_now" -ge "$_boot_epoch" ]; then
+        echo $((_now - _boot_epoch))
+        return
+      fi
+      ;;
+  esac
+
+  if [ -r /proc/uptime ]; then
+    read _uptime _rest < /proc/uptime
+    _uptime=${_uptime%.*}
+    case "$_uptime" in
+      ''|*[!0-9]*) ;;
+      *)
+        echo "$_uptime"
+        return
+        ;;
+    esac
+  fi
+
+  echo 0
+}
+
+screen_off_allowed() {
+  _reason=$1
+  _boot_age=$(boot_age_seconds)
+  case "$_boot_age" in
+    ''|*[!0-9]*) _boot_age=0 ;;
+  esac
+
+  if [ "$_boot_age" -lt "$SCREEN_OFF_BOOT_GRACE_SECONDS" ]; then
+    log_msg "WARN" "跳过息屏：开机保护期内不执行息屏命令，reason=$_reason，bootAgeSeconds=$_boot_age，graceSeconds=$SCREEN_OFF_BOOT_GRACE_SECONDS"
+    return 1
+  fi
+
+  return 0
+}
+
 turn_screen_off_logged() {
   _reason=$1
+  if ! screen_off_allowed "$_reason"; then
+    return
+  fi
+
   log_msg "INFO" "请求息屏：$_reason"
   if send_keyevent_timeout KEYCODE_SLEEP 223; then
     log_msg "INFO" "息屏命令成功：$_reason"

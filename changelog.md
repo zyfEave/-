@@ -1,8 +1,9 @@
-## 3.0
+## 3.1
 
 - 重构 native 定时主链路为单 timerfd、单 epoll、单 eventfd 和最小堆调度。
 - 新增 supervisor 崩溃自恢复、worker 回收、并发限制和 pending-once 合并策略。
 - 增强 schedule reload 原子性、clock 探测日志、短时 wakelock 和 stale lock 清理。
+- 开机保护期内跳过息屏命令，避免刚开机卡在首屏时被直接熄屏。
 - 替换增强版 WebUI，补充 doctor 状态字段和 scheduler 操作入口。
 - 补充卸载清理、日志轮转、双 ABI 构建与二进制版本自检。
 
