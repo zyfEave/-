@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoFire</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #68737d;
+      --line: #d7dde3;
+      --accent: #0f766e;
+      --accent-strong: #0b5d57;
+      --danger: #b42318;
+      --danger-bg: #fff1f0;
+      --danger-line: #f0b4ad;
+      --code-bg: #101820;
+      --code-text: #d8e2e7;
+      --shadow: 0 10px 28px rgba(28, 39, 49, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101418;
+        --panel: #171d22;
+        --text: #e6edf3;
+        --muted: #9aa8b4;
+        --line: #303a44;
+        --accent: #2dd4bf;
+        --accent-strong: #5eead4;
+        --danger: #ff8a80;
+        --danger-bg: #321a1a;
+        --danger-line: #6d3131;
+        --code-bg: #070a0d;
+        --code-text: #d8e2e7;
+        --shadow: none;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 720;
+      letter-spacing: 0;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel.full {
+      grid-column: 1 / -1;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 42px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+
+    .row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+      font-weight: 450;
+      margin-top: 2px;
+    }
+
+    input[type="checkbox"] {
+      width: 44px;
+      height: 24px;
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #cbd5dd;
+      position: relative;
+      flex: 0 0 auto;
+      transition: background 0.18s ease;
+    }
+
+    input[type="checkbox"]::after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      transition: transform 0.18s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    input[type="checkbox"]:checked {
+      background: var(--accent);
+    }
+
+    input[type="checkbox"]:checked::after {
+      transform: translateX(20px);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 40px;
+    }
+
+    .segmented button {
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .segmented button:last-child {
+      border-right: 0;
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .field {
+      margin-top: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 13px;
+      color: var(--text);
+      background: var(--panel);
+      font: inherit;
+      font-weight: 650;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:active {
+      background: var(--accent-strong);
+    }
+
+    button.danger {
+      color: var(--danger);
+      background: var(--danger-bg);
+      border-color: var(--danger-line);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+    }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 74px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      min-height: 240px;
+      max-height: 420px;
+      overflow: auto;
+      margin: 0;
+      padding: 12px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .toast {
+      position: fixed;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      min-height: 42px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 14px;
+      z-index: 10;
+    }
+
+    .toast.show {
+      display: flex;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding: 14px;
+      }
+
+      header,
+      .row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .grid,
+      .status {
+        grid-template-columns: 1fr;
+      }
+
+      .actions button {
+        flex: 1 1 148px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>AutoFire</h1>
+        <div class="subtle" id="modulePath">正在连接模块...</div>
+      </div>
+      <button id="refreshBtn" type="button">刷新</button>
+    </header>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>目标应用</h2>
+        <div class="row">
+          <label for="enableWechat">
+            微信
+            <span class="hint">com.tencent.mm</span>
+          </label>
+          <input id="enableWechat" type="checkbox">
+        </div>
+        <div class="row">
+          <label for="enableDouyin">
+            抖音
+            <span class="hint">com.ss.android.ugc.aweme</span>
+          </label>
+          <input id="enableDouyin" type="checkbox">
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>定时</h2>
+        <div class="row">
+          <label for="autoEnabled">
+            自动执行
+            <span class="hint">后台调度由 service.sh 启动</span>
+          </label>
+          <input id="autoEnabled" type="checkbox">
+        </div>
+        <div class="field">
+          <div class="segmented" role="tablist" aria-label="定时模式">
+            <button id="modeInterval" type="button">固定间隔</button>
+            <button id="modeDaily" type="button">每天定点</button>
+          </div>
+        </div>
+        <div class="field" id="intervalField">
+          <label for="intervalMinutes">间隔分钟数</label>
+          <input id="intervalMinutes" type="number" min="1" max="1440" step="1">
+        </div>
+        <div class="field" id="dailyField">
+          <label for="dailyTimes">每天定点时间</label>
+          <input id="dailyTimes" type="text" placeholder="03:00, 13:30">
+        </div>
+      </div>
+
+      <div class="panel full">
+        <h2>状态</h2>
+        <div class="status">
+          <div class="metric">
+            <span>上次执行</span>
+            <strong id="lastRun">-</strong>
+          </div>
+          <div class="metric">
+            <span>来源</span>
+            <strong id="lastSource">-</strong>
+          </div>
+          <div class="metric">
+            <span>结果</span>
+            <strong id="lastResult">-</strong>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="saveBtn" type="button">保存配置</button>
+          <button id="runBtn" type="button">立即执行</button>
+          <button id="resetBtn" type="button">恢复默认</button>
+        </div>
+      </div>
+
+      <div class="panel full">
+        <h2>日志</h2>
+        <pre id="logOutput">暂无日志</pre>
+        <div class="actions">
+          <button id="refreshLogBtn" type="button">刷新日志</button>
+          <button class="danger" id="clearLogBtn" type="button">清空日志</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      exec: null,
+      root: moduleRoot(),
+      mode: "interval",
+    };
+
+    function moduleRoot() {
+      const path = decodeURIComponent(window.location.pathname || "");
+      const marker = "/webroot/";
+      const index = path.indexOf(marker);
+      if (index >= 0) {
+        return path.slice(0, index);
+      }
+      return "/data/adb/modules/autofire-app-restarter";
+    }
+
+    function shellQuote(value) {
+      return "'" + String(value).replace(/'/g, "'\\''") + "'";
+    }
+
+    async function resolveExec() {
+      if (state.exec) return state.exec;
+
+      try {
+        const ksu = await import("kernelsu");
+        if (typeof ksu.exec === "function") {
+          state.exec = (command) => ksu.exec(command);
+          return state.exec;
+        }
+      } catch (error) {
+        // Fall through to injected globals used by compatible managers.
+      }
+
+      const bridges = [
+        window.ksu,
+        window.KernelSU,
+        window.apatch,
+        window.APatch,
+      ];
+      const bridge = bridges.find((candidate) => candidate && typeof candidate.exec === "function");
+
+      if (!bridge) {
+        throw new Error("当前 WebUI 环境没有提供 shell exec API");
+      }
+
+      state.exec = (command) => bridge.exec(command);
+      return state.exec;
+    }
+
+    async function runShell(command) {
+      const exec = await resolveExec();
+      let result = await exec(command);
+
+      if (typeof result === "string") {
+        try {
+          result = JSON.parse(result);
+        } catch (error) {
+          result = { errno: 0, stdout: result, stderr: "" };
+        }
+      }
+
+      const code = result.errno ?? result.code ?? 0;
+      if (code !== 0) {
+        throw new Error(result.stderr || result.stdout || "命令执行失败");
+      }
+      return result.stdout || "";
+    }
+
+    async function moduleScript(args) {
+      const script = `${state.root}/script/config.sh`;
+      return runShell(`sh ${shellQuote(script)} ${args}`);
+    }
+
+    function toast(message) {
+      const node = $("toast");
+      node.textContent = message;
+      node.classList.add("show");
+      window.clearTimeout(toast.timer);
+      toast.timer = window.setTimeout(() => node.classList.remove("show"), 2600);
+    }
+
+    function setBusy(isBusy) {
+      for (const button of document.querySelectorAll("button")) {
+        button.disabled = isBusy;
+      }
+    }
+
+    function applyMode(mode) {
+      state.mode = mode === "daily" ? "daily" : "interval";
+      $("modeInterval").classList.toggle("active", state.mode === "interval");
+      $("modeDaily").classList.toggle("active", state.mode === "daily");
+      $("intervalField").style.display = state.mode === "interval" ? "block" : "none";
+      $("dailyField").style.display = state.mode === "daily" ? "block" : "none";
+    }
+
+    function applyConfig(config) {
+      $("enableWechat").checked = Boolean(config.enable_wechat);
+      $("enableDouyin").checked = Boolean(config.enable_douyin);
+      $("autoEnabled").checked = Boolean(config.auto_enabled);
+      $("intervalMinutes").value = config.interval_minutes || 60;
+      $("dailyTimes").value = config.daily_times || "03:00";
+      $("lastRun").textContent = config.last_run || "-";
+      $("lastSource").textContent = config.last_source || "-";
+      $("lastResult").textContent = config.last_result || "-";
+      $("modulePath").textContent = config.log_path || state.root;
+      applyMode(config.schedule_mode || "interval");
+    }
+
+    function readFormArgs() {
+      const interval = Math.max(1, Math.min(1440, Number($("intervalMinutes").value || 60)));
+      const daily = $("dailyTimes").value.trim() || "03:00";
+      const args = [
+        `enable_wechat=${$("enableWechat").checked ? 1 : 0}`,
+        `enable_douyin=${$("enableDouyin").checked ? 1 : 0}`,
+        `auto_enabled=${$("autoEnabled").checked ? 1 : 0}`,
+        `schedule_mode=${state.mode}`,
+        `interval_minutes=${interval}`,
+        `daily_times=${daily}`,
+      ];
+      return args.map(shellQuote).join(" ");
+    }
+
+    async function loadConfig() {
+      const raw = await moduleScript("get-json");
+      applyConfig(JSON.parse(raw));
+    }
+
+    async function refreshLog() {
+      const text = await moduleScript("log 180");
+      $("logOutput").textContent = text.trim() || "暂无日志";
+    }
+
+    async function withBusy(work, okMessage) {
+      setBusy(true);
+      try {
+        await work();
+        if (okMessage) toast(okMessage);
+      } catch (error) {
+        toast(error.message || String(error));
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    $("modeInterval").addEventListener("click", () => applyMode("interval"));
+    $("modeDaily").addEventListener("click", () => applyMode("daily"));
+
+    $("refreshBtn").addEventListener("click", () => withBusy(async () => {
+      await loadConfig();
+      await refreshLog();
+    }, "已刷新"));
+
+    $("refreshLogBtn").addEventListener("click", () => withBusy(refreshLog, "日志已刷新"));
+
+    $("saveBtn").addEventListener("click", () => withBusy(async () => {
+      const raw = await moduleScript(`save ${readFormArgs()}`);
+      applyConfig(JSON.parse(raw));
+      await refreshLog();
+    }, "配置已保存"));
+
+    $("runBtn").addEventListener("click", () => withBusy(async () => {
+      await moduleScript("run webui");
+      await loadConfig();
+      await refreshLog();
+    }, "执行完成"));
+
+    $("resetBtn").addEventListener("click", () => withBusy(async () => {
+      const raw = await moduleScript("defaults");
+      applyConfig(JSON.parse(raw));
+      await refreshLog();
+    }, "已恢复默认"));
+
+    $("clearLogBtn").addEventListener("click", () => withBusy(async () => {
+      await moduleScript("clear-log");
+      await refreshLog();
+    }, "日志已清空"));
+
+    withBusy(async () => {
+      await loadConfig();
+      await refreshLog();
+    });
+  </script>
+</body>
+</html>
