@@ -23,6 +23,7 @@ set_data_paths() {
   LOG_FILE="$LOG_DIR/autofire.log"
   STATE_FILE="$STATE_DIR/scheduler.state"
   PID_FILE="$STATE_DIR/scheduler.pid"
+  SCHEDULE_FILE="$STATE_DIR/autofire.schedule"
   RUN_LOCK_DIR="$STATE_DIR/run.lock"
   SCHEDULER_LOCK_DIR="$STATE_DIR/scheduler.lock"
 }
@@ -32,6 +33,7 @@ MODULE_DATA_FALLBACK="$MODDIR/.data"
 LEGACY_CONFIG_FILE="$MODDIR/config/autofire.conf"
 LEGACY_LOG_FILE="$MODDIR/logs/autofire.log"
 LEGACY_STATE_DIR="$MODDIR/state"
+TIMER_BIN="$MODDIR/bin/autofire_timed"
 
 WECHAT_PKG="com.tencent.mm"
 DOUYIN_PKG="com.ss.android.ugc.aweme"
@@ -44,8 +46,6 @@ ensure_dirs() {
     mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" 2>/dev/null
     touch "$LOG_FILE" 2>/dev/null
   fi
-
-
 
   if [ -d "$LEGACY_STATE_DIR" ]; then
     for _state_item in last_run last_result last_source last_interval_epoch daily_runs.txt; do
@@ -299,14 +299,29 @@ scheduler_is_running() {
 start_scheduler_if_needed() {
   ensure_dirs
 
-  if scheduler_is_running; then
-    return 0
+  if [ ! -f "$MODDIR/script/scheduler.sh" ]; then
+    return 1
   fi
+
+  sh "$MODDIR/script/scheduler.sh" start
+}
+
+reload_scheduler() {
+  ensure_dirs
 
   if [ ! -f "$MODDIR/script/scheduler.sh" ]; then
     return 1
   fi
 
-  nohup sh "$MODDIR/script/scheduler.sh" >/dev/null 2>&1 &
-  return 0
+  sh "$MODDIR/script/scheduler.sh" reload
+}
+
+stop_scheduler() {
+  ensure_dirs
+
+  if [ ! -f "$MODDIR/script/scheduler.sh" ]; then
+    return 0
+  fi
+
+  sh "$MODDIR/script/scheduler.sh" stop
 }

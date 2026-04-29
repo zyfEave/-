@@ -1,3 +1,10 @@
+## 2.4
+
+- 调度器改为管理模式，优先使用 native timerfd/epoll 低开销定时器。
+- 没有 bin/autofire_timed 时自动降级为 shell 兜底定时，避免定时功能失效。
+- 任务执行、定时器、service 和配置保存日志改为中文。
+- 新增 native/autofire_timed.c 和 native/build-android.sh，方便编译开源 arm64 定时器。
+- 增加调度器启动锁和 native 启动自检，异常时自动切换 shell 兜底。
 ## 2.3 - 2026-04-29 19:49:10
 
 - 稳定版

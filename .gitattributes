@@ -7,3 +7,6 @@
 skip_mount text eol=lf
 
 *.md text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.mk text eol=lf

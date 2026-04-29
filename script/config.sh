@@ -28,6 +28,22 @@ print_config_json() {
   printf '}\n'
 }
 
+apply_scheduler_after_config_change() {
+  if [ "$AUTO_ENABLED" = "1" ]; then
+    if reload_scheduler; then
+      log_msg "INFO" "配置已保存，定时器已重新加载"
+    else
+      log_msg "WARN" "配置已保存，但定时器重新加载失败"
+    fi
+  else
+    if stop_scheduler; then
+      log_msg "INFO" "配置已保存，自动定时已关闭并停止定时器"
+    else
+      log_msg "WARN" "配置已保存，但停止定时器失败"
+    fi
+  fi
+}
+
 save_config_from_args() {
   load_config
 
@@ -45,8 +61,7 @@ save_config_from_args() {
   done
 
   write_config
-  log_msg "INFO" "configuration saved"
-  start_scheduler_after_config_save
+  apply_scheduler_after_config_change
   print_config_json
 }
 
@@ -67,7 +82,6 @@ clear_log() {
   : > "$LOG_FILE"
 }
 
-
 print_doctor_json() {
   ensure_dirs
 
@@ -76,11 +90,18 @@ print_doctor_json() {
     _log_writable=1
   fi
 
+  _scheduler_running=0
+  if scheduler_is_running; then
+    _scheduler_running=1
+  fi
+
   _module_path=$(json_escape "$MODDIR")
   _data_path=$(json_escape "$DATA_DIR")
   _config_path=$(json_escape "$CONFIG_FILE")
   _log_path=$(json_escape "$LOG_FILE")
   _state_path=$(json_escape "$STATE_DIR")
+  _schedule_path=$(json_escape "$SCHEDULE_FILE")
+  _timer_path=$(json_escape "$TIMER_BIN")
   _script_path=$(json_escape "$SCRIPT_DIR/config.sh")
   _id_output=$(json_escape "$(id 2>&1 | tr '\n' ' ')")
   _sh_path=$(json_escape "$(command -v sh 2>&1 | tr '\n' ' ')")
@@ -91,26 +112,19 @@ print_doctor_json() {
   printf '"config_path":"%s",' "$_config_path"
   printf '"log_path":"%s",' "$_log_path"
   printf '"state_path":"%s",' "$_state_path"
+  printf '"schedule_path":"%s",' "$_schedule_path"
+  printf '"timer_path":"%s",' "$_timer_path"
   printf '"script_path":"%s",' "$_script_path"
   printf '"script_exists":%s,' "$(json_bool "$([ -f "$SCRIPT_DIR/config.sh" ] && echo 1 || echo 0)")"
   printf '"config_exists":%s,' "$(json_bool "$([ -f "$CONFIG_FILE" ] && echo 1 || echo 0)")"
   printf '"log_writable":%s,' "$(json_bool "$_log_writable")"
+  printf '"timer_exists":%s,' "$(json_bool "$([ -f "$TIMER_BIN" ] && echo 1 || echo 0)")"
+  printf '"timer_executable":%s,' "$(json_bool "$([ -x "$TIMER_BIN" ] && echo 1 || echo 0)")"
+  printf '"scheduler_running":%s,' "$(json_bool "$_scheduler_running")"
   printf '"id":"%s",' "$_id_output"
   printf '"sh":"%s"' "$_sh_path"
   printf '}\n'
 }
-
-
-start_scheduler_after_config_save() {
-  if [ "$AUTO_ENABLED" = "1" ]; then
-    if start_scheduler_if_needed; then
-      log_msg "INFO" "scheduler launch checked after configuration save"
-    else
-      log_msg "WARN" "scheduler launch failed after configuration save"
-    fi
-  fi
-}
-
 
 case "$1" in
   get-json)
@@ -131,8 +145,8 @@ case "$1" in
     ;;
   defaults)
     write_default_config
-    start_scheduler_after_config_save
-    log_msg "INFO" "configuration reset to defaults"
+    apply_scheduler_after_config_change
+    log_msg "INFO" "配置已恢复默认"
     print_config_json
     ;;
   *)
