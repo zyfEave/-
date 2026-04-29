@@ -1,7 +1,7 @@
 id=autofire-app-restarter
 name=小象
-version=v1.3
-versionCode=4
+version=v1.4
+versionCode=5
 author=帆帆
-description=只有你自己懂
+description=定时重启微信和抖音，支持持久化配置、详细操作日志、Action 触发与 KSU/APatch WebUI
 updateJson=https://raw.githubusercontent.com/zyfEave/-/main/update.json
