@@ -295,7 +295,7 @@
 
     .status {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -354,6 +354,19 @@
 
     .toast.show {
       display: flex;
+    }
+
+    .scroll-bottom {
+      position: fixed;
+      right: calc(18px + env(safe-area-inset-right, 0px));
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      z-index: 9;
+      min-width: 76px;
+      box-shadow: var(--shadow);
+    }
+
+    .scroll-bottom[hidden] {
+      display: none;
     }
 
     @media (max-width: 720px) {
@@ -442,6 +455,28 @@
       </div>
 
       <div class="panel full">
+        <h2>状态</h2>
+        <div class="status">
+          <div class="metric">
+            <span>调度器</span>
+            <strong id="schedulerStatus">未知</strong>
+          </div>
+          <div class="metric">
+            <span>进程 PID</span>
+            <strong id="schedulerPid">-</strong>
+          </div>
+          <div class="metric">
+            <span>native 定时器</span>
+            <strong id="timerStatus">未知</strong>
+          </div>
+          <div class="metric">
+            <span>唤醒锁</span>
+            <strong id="wakeLockStatus">未知</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel full" id="logPanel">
         <h2>日志</h2>
         <pre id="logOutput">暂无日志</pre>
         <div class="actions">
@@ -453,6 +488,7 @@
   </main>
 
   <div class="toast" id="toast"></div>
+  <button class="scroll-bottom" id="scrollBottomBtn" type="button">到底部</button>
 
   <script type="module">
     const $ = (id) => document.getElementById(id);
@@ -463,6 +499,7 @@
       root: moduleRoot(),
       mode: "daily",
       dailyTimes: ["03:00"],
+      doctor: null,
     };
 
     function moduleRoot() {
@@ -641,6 +678,11 @@
           "script_exists=" + info.script_exists,
           "config_exists=" + info.config_exists,
           "log_writable=" + info.log_writable,
+          "timer_exists=" + info.timer_exists,
+          "timer_executable=" + info.timer_executable,
+          "scheduler_running=" + info.scheduler_running,
+          "scheduler_pid=" + (info.scheduler_pid || ""),
+          "wake_lock_held=" + info.wake_lock_held,
           "id=" + (info.id || ""),
           "sh=" + (info.sh || ""),
         ].join("\n");
@@ -730,6 +772,38 @@
       renderDailyTimes();
     }
 
+    function applyDoctor(info) {
+      state.doctor = info;
+      $("schedulerStatus").textContent = info.scheduler_running ? "运行中" : "未运行";
+      $("schedulerPid").textContent = info.scheduler_pid || "-";
+      if (!info.timer_exists) {
+        $("timerStatus").textContent = "不存在";
+      } else if (!info.timer_executable) {
+        $("timerStatus").textContent = "存在但不可执行";
+      } else {
+        $("timerStatus").textContent = "已就绪";
+      }
+      $("wakeLockStatus").textContent = info.wake_lock_held ? "已持有" : "未持有或不可用";
+    }
+
+    async function refreshDoctor() {
+      const raw = await moduleScript("doctor");
+      const text = raw.trim();
+      if (!text) throw new Error("No JSON output from doctor");
+      try {
+        applyDoctor(JSON.parse(text));
+      } catch (error) {
+        throw new Error("doctor JSON parse failed: " + text.slice(0, 180));
+      }
+    }
+
+    function updateScrollBottomButton() {
+      const node = $("scrollBottomBtn");
+      const doc = document.documentElement;
+      const bottomGap = doc.scrollHeight - (window.scrollY + window.innerHeight);
+      node.hidden = bottomGap < 120;
+    }
+
     function applyConfig(config) {
       $("enableWechat").checked = Boolean(config.enable_wechat);
       $("enableDouyin").checked = Boolean(config.enable_douyin);
@@ -799,6 +873,7 @@
 
     $("refreshBtn").addEventListener("click", () => withBusy(async () => {
       await loadConfig();
+      await refreshDoctor();
       await refreshLog();
     }, "已刷新"));
 
@@ -807,6 +882,7 @@
     $("saveBtn").addEventListener("click", () => withBusy(async () => {
       const raw = await moduleScript(`save ${readFormArgs()}`);
       applyConfig(JSON.parse(raw.trim()));
+      await refreshDoctor();
       await refreshLog();
     }, "配置已保存"));
 
@@ -814,6 +890,7 @@
     $("resetBtn").addEventListener("click", () => withBusy(async () => {
       const raw = await moduleScript("defaults");
       applyConfig(JSON.parse(raw.trim()));
+      await refreshDoctor();
       await refreshLog();
     }, "已恢复默认"));
 
@@ -822,8 +899,16 @@
       await refreshLog();
     }, "日志已清空"));
 
+    $("scrollBottomBtn").addEventListener("click", () => {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    });
+    window.addEventListener("scroll", updateScrollBottomButton, { passive: true });
+    window.addEventListener("resize", updateScrollBottomButton);
+    updateScrollBottomButton();
+
     withBusy(async () => {
       await loadConfig();
+      await refreshDoctor();
       await refreshLog();
     });
   </script>

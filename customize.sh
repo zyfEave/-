@@ -13,5 +13,8 @@ ui_print ""
 if [ -n "$MODPATH" ] && type set_perm >/dev/null 2>&1; then
   set_perm "$MODPATH/service.sh" 0 0 0755
   set_perm "$MODPATH/action.sh" 0 0 0755
+  if [ -f "$MODPATH/bin/autofire_timed" ]; then
+    set_perm "$MODPATH/bin/autofire_timed" 0 0 0755
+  fi
   set_perm_recursive "$MODPATH/script" 0 0 0755 0755
 fi

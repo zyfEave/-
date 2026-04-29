@@ -48,6 +48,15 @@ stop_scheduler_process() {
     log_msg "INFO" "定时器已停止：pid=$_pid"
   fi
 
+  if [ "$(read_state_value scheduler_wake_lock)" = "1" ]; then
+    if release_wake_lock; then
+      log_msg "INFO" "定时器唤醒锁已释放"
+    else
+      log_msg "WARN" "定时器唤醒锁释放失败"
+    fi
+    rm -f "$STATE_DIR/scheduler_wake_lock"
+  fi
+
   rm -f "$PID_FILE"
   rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
 }
@@ -72,6 +81,14 @@ start_native_scheduler() {
     log_msg "WARN" "native定时器启动后立即退出，切换到shell兜底：$TIMER_BIN"
     return 1
   fi
+
+  if acquire_wake_lock; then
+    write_state_value scheduler_wake_lock 1
+    log_msg "INFO" "native定时器已持有唤醒锁，息屏定时将按稳定优先运行"
+  else
+    log_msg "WARN" "native定时器唤醒锁不可用，息屏深睡时仍可能延迟"
+  fi
+
   log_msg "INFO" "native低开销定时器已启动：pid=$_pid"
   return 0
 }
@@ -120,6 +137,8 @@ start_scheduler() {
     rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
     return 0
   fi
+
+  rm -f "$STATE_DIR/scheduler_wake_lock"
 
   if ! write_schedule_file; then
     rmdir "$SCHEDULER_LOCK_DIR" 2>/dev/null
@@ -212,6 +231,7 @@ fallback_loop() {
     if [ "$WAKE_LOCK_HELD" != "1" ]; then
       if acquire_wake_lock; then
         WAKE_LOCK_HELD=1
+        write_state_value scheduler_wake_lock 1
         log_msg "INFO" "shell兜底定时已持有唤醒锁"
       elif [ "$WAKE_LOCK_WARNED" != "1" ]; then
         WAKE_LOCK_WARNED=1
@@ -229,6 +249,7 @@ fallback_loop() {
 
   if [ "$WAKE_LOCK_HELD" = "1" ]; then
     release_wake_lock >/dev/null 2>&1
+    rm -f "$STATE_DIR/scheduler_wake_lock"
     log_msg "INFO" "shell兜底定时已释放唤醒锁"
   fi
 

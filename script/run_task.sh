@@ -5,6 +5,7 @@ SCRIPT_DIR=$(cd "${0%/*}" 2>/dev/null && pwd)
 
 SOURCE=${1:-manual}
 DELAY_SECONDS=${2:-0}
+COMMAND_TIMEOUT_SECONDS=${COMMAND_TIMEOUT_SECONDS:-12}
 
 case "$DELAY_SECONDS" in
   ''|*[!0-9]*) DELAY_SECONDS=0 ;;
@@ -36,38 +37,90 @@ if ! mkdir "$RUN_LOCK_DIR" 2>/dev/null; then
 fi
 
 cleanup_run_lock() {
+  rm -f "$STATE_DIR/cmd_timeout.$$"
   rmdir "$RUN_LOCK_DIR" 2>/dev/null
 }
 trap cleanup_run_lock EXIT INT TERM
 
+run_quiet_with_timeout() {
+  _timeout=$1
+  shift
+  _timeout_file="$STATE_DIR/cmd_timeout.$$"
+  rm -f "$_timeout_file"
+
+  "$@" >/dev/null 2>&1 &
+  _cmd_pid=$!
+
+  (
+    sleep "$_timeout"
+    if kill -0 "$_cmd_pid" 2>/dev/null; then
+      echo timeout > "$_timeout_file"
+      kill "$_cmd_pid" 2>/dev/null
+      sleep 1
+      kill -9 "$_cmd_pid" 2>/dev/null
+    fi
+  ) &
+  _watchdog_pid=$!
+
+  wait "$_cmd_pid" 2>/dev/null
+  _rc=$?
+  kill "$_watchdog_pid" 2>/dev/null
+  wait "$_watchdog_pid" 2>/dev/null
+
+  if [ -f "$_timeout_file" ]; then
+    rm -f "$_timeout_file"
+    return 124
+  fi
+
+  rm -f "$_timeout_file"
+  return "$_rc"
+}
+
+send_keyevent_timeout() {
+  _name=$1
+  _code=$2
+  run_quiet_with_timeout 6 input keyevent "$_name" || run_quiet_with_timeout 6 input keyevent "$_code"
+}
+
 turn_screen_off_logged() {
   _reason=$1
   log_msg "INFO" "请求息屏：$_reason"
-  if sleep_device; then
+  if send_keyevent_timeout KEYCODE_SLEEP 223; then
     log_msg "INFO" "息屏命令成功：$_reason"
   else
-    log_msg "WARN" "息屏命令失败：$_reason"
+    log_msg "WARN" "息屏命令失败或超时：$_reason"
   fi
 }
 
 wake_screen_logged() {
   _reason=$1
   log_msg "INFO" "请求亮屏：$_reason"
-  if wake_device; then
+  if send_keyevent_timeout KEYCODE_WAKEUP 224; then
     log_msg "INFO" "亮屏命令成功：$_reason"
   else
-    log_msg "WARN" "亮屏命令失败：$_reason"
+    log_msg "WARN" "亮屏命令失败或超时：$_reason"
   fi
+}
+
+dismiss_keyguard_logged() {
+  _reason=$1
+  log_msg "INFO" "请求关闭非安全锁屏：$_reason"
+  if run_quiet_with_timeout 6 wm dismiss-keyguard; then
+    log_msg "INFO" "非安全锁屏关闭命令成功：$_reason"
+  else
+    log_msg "WARN" "非安全锁屏关闭失败或设备存在安全锁屏：$_reason"
+  fi
+  log_msg "INFO" "提示：如设备启用密码/指纹锁屏，系统可能阻止前台页面显示，但脚本会继续执行命令"
 }
 
 home_logged() {
   _label=$1
   _reason=$2
   log_msg "INFO" "$_label 请求回到桌面：$_reason"
-  if home_device; then
+  if send_keyevent_timeout KEYCODE_HOME 3; then
     log_msg "INFO" "$_label 回到桌面成功：$_reason"
   else
-    log_msg "WARN" "$_label 回到桌面失败：$_reason"
+    log_msg "WARN" "$_label 回到桌面失败或超时：$_reason"
   fi
 }
 
@@ -83,6 +136,9 @@ write_state_value last_run "$(date +"%Y-%m-%d %H:%M:%S")"
 
 wake_screen_logged "重启应用前亮屏"
 sleep 2
+dismiss_keyguard_logged "重启应用前"
+home_logged "系统" "任务开始前回到桌面，避免停留管理器前台"
+sleep 1
 
 TARGET_COUNT=0
 SUCCESS_COUNT=0
@@ -94,36 +150,68 @@ restart_package() {
   TARGET_COUNT=$((TARGET_COUNT + 1))
 
   log_msg "INFO" "$_label 操作开始：$_pkg"
-
-  if ! pm path "$_pkg" >/dev/null 2>&1; then
-    log_msg "WARN" "$_label 未安装，跳过杀死/启动/回桌面：$_pkg"
-    FAIL_COUNT=$((FAIL_COUNT + 1))
-    return
-  fi
+  log_msg "INFO" "$_label 检查安装状态：pm path $_pkg"
+  run_quiet_with_timeout 8 pm path "$_pkg"
+  _rc=$?
+  case "$_rc" in
+    0)
+      log_msg "INFO" "$_label 安装状态正常：$_pkg"
+      ;;
+    124)
+      log_msg "ERROR" "$_label 检查安装状态超时：$_pkg"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+    *)
+      log_msg "WARN" "$_label 未安装或无法读取安装状态，跳过杀死/启动/回桌面：$_pkg，返回码=$_rc"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+  esac
 
   home_logged "$_label" "强制停止前关闭前台"
   sleep 1
 
   log_msg "INFO" "$_label 请求杀死进程：am force-stop $_pkg"
-  if am force-stop "$_pkg" >/dev/null 2>&1; then
-    log_msg "INFO" "$_label 杀死进程成功：$_pkg"
-  else
-    log_msg "ERROR" "$_label 杀死进程失败：$_pkg"
-    FAIL_COUNT=$((FAIL_COUNT + 1))
-    return
-  fi
+  run_quiet_with_timeout "$COMMAND_TIMEOUT_SECONDS" am force-stop "$_pkg"
+  _rc=$?
+  case "$_rc" in
+    0)
+      log_msg "INFO" "$_label 杀死进程成功：$_pkg"
+      ;;
+    124)
+      log_msg "ERROR" "$_label 杀死进程超时：$_pkg"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+    *)
+      log_msg "ERROR" "$_label 杀死进程失败：$_pkg，返回码=$_rc"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+  esac
 
   sleep 1
 
   log_msg "INFO" "$_label 请求启动应用：monkey launcher $_pkg"
-  if monkey -p "$_pkg" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1; then
-    log_msg "INFO" "$_label 启动命令成功：$_pkg"
-    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-  else
-    log_msg "ERROR" "$_label 启动命令失败：$_pkg"
-    FAIL_COUNT=$((FAIL_COUNT + 1))
-    return
-  fi
+  run_quiet_with_timeout 15 monkey -p "$_pkg" -c android.intent.category.LAUNCHER 1
+  _rc=$?
+  case "$_rc" in
+    0)
+      log_msg "INFO" "$_label 启动命令成功：$_pkg"
+      SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      ;;
+    124)
+      log_msg "ERROR" "$_label 启动命令超时：$_pkg"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+    *)
+      log_msg "ERROR" "$_label 启动命令失败：$_pkg，返回码=$_rc"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+      ;;
+  esac
 
   _settle_seconds=$APP_SETTLE_SECONDS
   if [ "$_pkg" = "$DOUYIN_PKG" ] && [ "$SOURCE" = "action" ]; then

@@ -91,6 +91,10 @@ print_doctor_json() {
   fi
 
   _scheduler_running=0
+  _scheduler_pid=$(sed -n '1p' "$PID_FILE" 2>/dev/null)
+  case "$_scheduler_pid" in
+    ''|*[!0-9]*) _scheduler_pid="" ;;
+  esac
   if scheduler_is_running; then
     _scheduler_running=1
   fi
@@ -102,6 +106,7 @@ print_doctor_json() {
   _state_path=$(json_escape "$STATE_DIR")
   _schedule_path=$(json_escape "$SCHEDULE_FILE")
   _timer_path=$(json_escape "$TIMER_BIN")
+  _scheduler_pid_json=$(json_escape "$_scheduler_pid")
   _script_path=$(json_escape "$SCRIPT_DIR/config.sh")
   _id_output=$(json_escape "$(id 2>&1 | tr '\n' ' ')")
   _sh_path=$(json_escape "$(command -v sh 2>&1 | tr '\n' ' ')")
@@ -121,6 +126,8 @@ print_doctor_json() {
   printf '"timer_exists":%s,' "$(json_bool "$([ -f "$TIMER_BIN" ] && echo 1 || echo 0)")"
   printf '"timer_executable":%s,' "$(json_bool "$([ -x "$TIMER_BIN" ] && echo 1 || echo 0)")"
   printf '"scheduler_running":%s,' "$(json_bool "$_scheduler_running")"
+  printf '"scheduler_pid":"%s",' "$_scheduler_pid_json"
+  printf '"wake_lock_held":%s,' "$(json_bool "$([ "$(read_state_value scheduler_wake_lock)" = "1" ] && echo 1 || echo 0)")"
   printf '"id":"%s",' "$_id_output"
   printf '"sh":"%s"' "$_sh_path"
   printf '}\n'
