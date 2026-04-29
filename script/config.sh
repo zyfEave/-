@@ -64,7 +64,6 @@ print_log() {
 clear_log() {
   ensure_dirs
   : > "$LOG_FILE"
-  log_msg "INFO" "log cleared"
 }
 
 case "$1" in
@@ -81,17 +80,13 @@ case "$1" in
   clear-log)
     clear_log
     ;;
-  run)
-    shift
-    sh "$MODDIR/script/run_task.sh" "${1:-webui}" 0
-    ;;
   defaults)
     write_default_config
     log_msg "INFO" "configuration reset to defaults"
     print_config_json
     ;;
   *)
-    echo "usage: $0 get-json|save|log|clear-log|run|defaults"
+    echo "usage: $0 get-json|save|log|clear-log|defaults"
     exit 1
     ;;
 esac

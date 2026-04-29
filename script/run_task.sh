@@ -113,8 +113,14 @@ restart_package() {
     return
   fi
 
-  log_msg "INFO" "$_label waiting ${APP_SETTLE_SECONDS}s after launch"
-  sleep "$APP_SETTLE_SECONDS"
+  _settle_seconds=$APP_SETTLE_SECONDS
+  if [ "$_pkg" = "$DOUYIN_PKG" ] && [ "$SOURCE" = "action" ]; then
+    _settle_seconds=60
+    log_msg "INFO" "$_label action mode: keep Douyin foreground for 60s before returning home"
+  fi
+
+  log_msg "INFO" "$_label waiting ${_settle_seconds}s after launch"
+  sleep "$_settle_seconds"
 
   home_logged "$_label" "close app to launcher after launch"
   sleep 1

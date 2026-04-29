@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#101418" media="(prefers-color-scheme: dark)">
-  <title>??</title>
+  <title>&#23567;&#35937;</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -200,7 +200,8 @@
     }
 
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    input[type="time"] {
       width: 100%;
       min-height: 40px;
       border: 1px solid var(--line);
@@ -213,6 +214,45 @@
 
     .field {
       margin-top: 12px;
+    }
+
+    .time-editor {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .time-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      min-height: 34px;
+    }
+
+    .time-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 4px 8px;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .time-chip button {
+      min-height: 24px;
+      border: 0;
+      padding: 0 2px;
+      color: var(--danger);
+      background: transparent;
+      font-size: 18px;
+      line-height: 1;
     }
 
     .actions {
@@ -342,7 +382,7 @@
   <main>
     <header>
       <div>
-        <h1>??</h1>
+        <h1>&#23567;&#35937;</h1>
         <div class="subtle" id="modulePath">正在连接模块...</div>
       </div>
       <button id="refreshBtn" type="button">刷新</button>
@@ -378,8 +418,8 @@
         </div>
         <div class="field">
           <div class="segmented" role="tablist" aria-label="定时模式">
-            <button id="modeInterval" type="button">固定间隔</button>
-            <button id="modeDaily" type="button">每天定点</button>
+            <button id="modeDaily" type="button">&#27599;&#22825;&#23450;&#28857;</button>
+            <button id="modeInterval" type="button">&#22266;&#23450;&#38388;&#38548;</button>
           </div>
         </div>
         <div class="field" id="intervalField">
@@ -387,31 +427,17 @@
           <input id="intervalMinutes" type="number" min="1" max="1440" step="1">
         </div>
         <div class="field" id="dailyField">
-          <label for="dailyTimes">每天定点时间</label>
-          <input id="dailyTimes" type="text" placeholder="03:00, 13:30">
-        </div>
-      </div>
-
-      <div class="panel full">
-        <h2>状态</h2>
-        <div class="status">
-          <div class="metric">
-            <span>上次执行</span>
-            <strong id="lastRun">-</strong>
+          <label for="dailyTimeInput">&#27599;&#22825;&#23450;&#28857;&#26102;&#38388;</label>
+          <div class="time-editor">
+            <input id="dailyTimeInput" type="time" value="03:00">
+            <button id="addDailyTimeBtn" type="button">&#28155;&#21152;</button>
           </div>
-          <div class="metric">
-            <span>来源</span>
-            <strong id="lastSource">-</strong>
-          </div>
-          <div class="metric">
-            <span>结果</span>
-            <strong id="lastResult">-</strong>
-          </div>
+          <div class="time-list" id="dailyTimeList"></div>
+          <input id="dailyTimes" type="hidden" value="03:00">
         </div>
         <div class="actions">
-          <button class="primary" id="saveBtn" type="button">保存配置</button>
-          <button id="runBtn" type="button">立即执行</button>
-          <button id="resetBtn" type="button">恢复默认</button>
+          <button class="primary" id="saveBtn" type="button">&#20445;&#23384;&#37197;&#32622;</button>
+          <button id="resetBtn" type="button">&#24674;&#22797;&#40664;&#35748;</button>
         </div>
       </div>
 
@@ -434,7 +460,8 @@
     const state = {
       exec: null,
       root: moduleRoot(),
-      mode: "interval",
+      mode: "daily",
+      dailyTimes: ["03:00"],
     };
 
     function moduleRoot() {
@@ -567,22 +594,66 @@
       $("dailyField").style.display = state.mode === "daily" ? "block" : "none";
     }
 
+    function normalizeDailyTimes(value) {
+      const seen = new Set();
+      const result = String(value || "03:00")
+        .split(/[\uFF0C,;\uFF1B|\s]+/)
+        .map((item) => item.trim())
+        .filter((item) => /^([01]\d|2[0-3]):[0-5]\d$/.test(item))
+        .filter((item) => {
+          if (seen.has(item)) return false;
+          seen.add(item);
+          return true;
+        });
+      return result.length ? result : ["03:00"];
+    }
+
+    function renderDailyTimes() {
+      const list = $("dailyTimeList");
+      list.innerHTML = "";
+      $("dailyTimes").value = state.dailyTimes.join(",");
+
+      for (const time of state.dailyTimes) {
+        const chip = document.createElement("span");
+        chip.className = "time-chip";
+        chip.textContent = time;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "\u00d7";
+        remove.setAttribute("aria-label", "\u5220\u9664 " + time);
+        remove.addEventListener("click", () => {
+          state.dailyTimes = state.dailyTimes.filter((item) => item !== time);
+          if (!state.dailyTimes.length) state.dailyTimes = ["03:00"];
+          renderDailyTimes();
+        });
+
+        chip.appendChild(remove);
+        list.appendChild(chip);
+      }
+    }
+
+    function addDailyTime() {
+      const value = $("dailyTimeInput").value || "03:00";
+      state.dailyTimes = normalizeDailyTimes([...state.dailyTimes, value].join(","));
+      renderDailyTimes();
+    }
+
     function applyConfig(config) {
       $("enableWechat").checked = Boolean(config.enable_wechat);
       $("enableDouyin").checked = Boolean(config.enable_douyin);
       $("autoEnabled").checked = Boolean(config.auto_enabled);
       $("intervalMinutes").value = config.interval_minutes || 60;
-      $("dailyTimes").value = config.daily_times || "03:00";
-      $("lastRun").textContent = config.last_run || "-";
-      $("lastSource").textContent = config.last_source || "-";
-      $("lastResult").textContent = config.last_result || "-";
+      state.dailyTimes = normalizeDailyTimes(config.daily_times || "03:00");
+      $("dailyTimeInput").value = state.dailyTimes[0] || "03:00";
       $("modulePath").textContent = config.log_path || state.root;
-      applyMode(config.schedule_mode || "interval");
+      renderDailyTimes();
+      applyMode(config.schedule_mode || "daily");
     }
 
     function readFormArgs() {
       const interval = Math.max(1, Math.min(1440, Number($("intervalMinutes").value || 60)));
-      const daily = $("dailyTimes").value.trim() || "03:00";
+      const daily = state.dailyTimes.length ? state.dailyTimes.join(",") : "03:00";
       const args = [
         `enable_wechat=${$("enableWechat").checked ? 1 : 0}`,
         `enable_douyin=${$("enableDouyin").checked ? 1 : 0}`,
@@ -620,8 +691,15 @@
       }
     }
 
-    $("modeInterval").addEventListener("click", () => applyMode("interval"));
     $("modeDaily").addEventListener("click", () => applyMode("daily"));
+    $("modeInterval").addEventListener("click", () => applyMode("interval"));
+    $("addDailyTimeBtn").addEventListener("click", addDailyTime);
+    $("dailyTimeInput").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addDailyTime();
+      }
+    });
 
     $("refreshBtn").addEventListener("click", () => withBusy(async () => {
       await loadConfig();
@@ -636,11 +714,6 @@
       await refreshLog();
     }, "配置已保存"));
 
-    $("runBtn").addEventListener("click", () => withBusy(async () => {
-      await moduleScript("run webui");
-      await loadConfig();
-      await refreshLog();
-    }, "执行完成"));
 
     $("resetBtn").addEventListener("click", () => withBusy(async () => {
       const raw = await moduleScript("defaults");

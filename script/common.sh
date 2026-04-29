@@ -11,16 +11,22 @@ case "$SCRIPT_DIR" in
 esac
 
 MODULE_ID="autofire-app-restarter"
-DATA_DIR="${AUTOFIRE_DATA_DIR:-/data/adb/$MODULE_ID}"
-CONFIG_DIR="$DATA_DIR/config"
-LOG_DIR="$DATA_DIR/logs"
-STATE_DIR="$DATA_DIR/state"
-CONFIG_FILE="$CONFIG_DIR/autofire.conf"
-LOG_FILE="$LOG_DIR/autofire.log"
-STATE_FILE="$STATE_DIR/scheduler.state"
-PID_FILE="$STATE_DIR/scheduler.pid"
-RUN_LOCK_DIR="$STATE_DIR/run.lock"
-SCHEDULER_LOCK_DIR="$STATE_DIR/scheduler.lock"
+
+set_data_paths() {
+  DATA_DIR=$1
+  CONFIG_DIR="$DATA_DIR/config"
+  LOG_DIR="$DATA_DIR/logs"
+  STATE_DIR="$DATA_DIR/state"
+  CONFIG_FILE="$CONFIG_DIR/autofire.conf"
+  LOG_FILE="$LOG_DIR/autofire.log"
+  STATE_FILE="$STATE_DIR/scheduler.state"
+  PID_FILE="$STATE_DIR/scheduler.pid"
+  RUN_LOCK_DIR="$STATE_DIR/run.lock"
+  SCHEDULER_LOCK_DIR="$STATE_DIR/scheduler.lock"
+}
+
+set_data_paths "${AUTOFIRE_DATA_DIR:-/data/adb/$MODULE_ID}"
+MODULE_DATA_FALLBACK="$MODDIR/.data"
 LEGACY_CONFIG_FILE="$MODDIR/config/autofire.conf"
 LEGACY_LOG_FILE="$MODDIR/logs/autofire.log"
 LEGACY_STATE_DIR="$MODDIR/state"
@@ -29,19 +35,15 @@ WECHAT_PKG="com.tencent.mm"
 DOUYIN_PKG="com.ss.android.ugc.aweme"
 
 ensure_dirs() {
-  mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR"
+  mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" 2>/dev/null
 
-  if [ ! -f "$CONFIG_FILE" ] && [ -f "$LEGACY_CONFIG_FILE" ]; then
-    cp "$LEGACY_CONFIG_FILE" "$CONFIG_FILE" 2>/dev/null
+  if ! touch "$LOG_FILE" 2>/dev/null; then
+    set_data_paths "$MODULE_DATA_FALLBACK"
+    mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$STATE_DIR" 2>/dev/null
+    touch "$LOG_FILE" 2>/dev/null
   fi
 
-  if [ ! -f "$LOG_FILE" ]; then
-    if [ -f "$LEGACY_LOG_FILE" ]; then
-      cp "$LEGACY_LOG_FILE" "$LOG_FILE" 2>/dev/null || : > "$LOG_FILE"
-    else
-      : > "$LOG_FILE"
-    fi
-  fi
+
 
   if [ -d "$LEGACY_STATE_DIR" ]; then
     for _state_item in last_run last_result last_source last_interval_epoch daily_runs.txt; do
@@ -68,8 +70,8 @@ normalize_bool() {
 
 normalize_mode() {
   case "$1" in
-    daily) echo "daily" ;;
-    *) echo "interval" ;;
+    interval) echo "interval" ;;
+    *) echo "daily" ;;
   esac
 }
 
@@ -145,7 +147,7 @@ normalize_daily_times() {
 sanitize_config() {
   ENABLE_WECHAT=$(normalize_bool "$ENABLE_WECHAT" 1)
   ENABLE_DOUYIN=$(normalize_bool "$ENABLE_DOUYIN" 1)
-  AUTO_ENABLED=$(normalize_bool "$AUTO_ENABLED" 0)
+  AUTO_ENABLED=$(normalize_bool "$AUTO_ENABLED" 1)
   SCHEDULE_MODE=$(normalize_mode "$SCHEDULE_MODE")
   INTERVAL_MINUTES=$(normalize_positive_int "$INTERVAL_MINUTES" 60 1 1440)
   DAILY_TIMES=$(normalize_daily_times "$DAILY_TIMES")
@@ -171,8 +173,8 @@ EOF
 write_default_config() {
   ENABLE_WECHAT=1
   ENABLE_DOUYIN=1
-  AUTO_ENABLED=0
-  SCHEDULE_MODE="interval"
+  AUTO_ENABLED=1
+  SCHEDULE_MODE="daily"
   INTERVAL_MINUTES=60
   DAILY_TIMES="03:00"
   APP_SETTLE_SECONDS=8
@@ -188,8 +190,8 @@ load_config() {
 
   ENABLE_WECHAT=1
   ENABLE_DOUYIN=1
-  AUTO_ENABLED=0
-  SCHEDULE_MODE="interval"
+  AUTO_ENABLED=1
+  SCHEDULE_MODE="daily"
   INTERVAL_MINUTES=60
   DAILY_TIMES="03:00"
   APP_SETTLE_SECONDS=8
