@@ -9,18 +9,16 @@
   <style>
     :root {
       color-scheme: light dark;
-      --bg: #f3f7fb;
-      --bg-soft: #f8fbfd;
-      --panel: rgba(255, 255, 255, 0.54);
-      --panel-strong: rgba(255, 255, 255, 0.72);
-      --text: #101923;
-      --muted: #64727f;
-      --line: rgba(44, 67, 83, 0.16);
-      --edge: rgba(255, 255, 255, 0.72);
-      --shade: rgba(20, 34, 45, 0.08);
-      --accent: #0b7f86;
-      --accent-2: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.13);
+      --bg: #eef7f5;
+      --bg-soft: #f7faf9;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: #ffffff;
+      --text: #14212b;
+      --muted: #657581;
+      --line: rgba(35, 64, 75, 0.14);
+      --accent: #0f766e;
+      --accent-2: #14b8a6;
+      --accent-soft: rgba(20, 184, 166, 0.14);
       --ok: #047857;
       --ok-bg: rgba(16, 185, 129, 0.14);
       --warn: #b45309;
@@ -29,26 +27,23 @@
       --danger-bg: rgba(244, 63, 94, 0.12);
       --code-bg: #0b1217;
       --code-text: #dce7ec;
-      --shadow: 0 22px 58px rgba(24, 45, 62, 0.16);
-      --inner-light: inset 0 1px 0 rgba(255,255,255,0.76), inset 0 -1px 0 rgba(255,255,255,0.22);
-      --radius: 22px;
-      --radius-sm: 14px;
+      --shadow: 0 18px 50px rgba(14, 34, 44, 0.12);
+      --radius: 18px;
+      --radius-sm: 12px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #070b10;
-        --bg-soft: #0d141b;
-        --panel: rgba(20, 28, 36, 0.58);
-        --panel-strong: rgba(30, 40, 50, 0.74);
-        --text: #eef6fb;
-        --muted: #9aaab6;
-        --line: rgba(225, 241, 255, 0.14);
-        --edge: rgba(255, 255, 255, 0.18);
-        --shade: rgba(0, 0, 0, 0.24);
-        --accent: #5eead4;
-        --accent-2: #7dd3fc;
-        --accent-soft: rgba(125, 211, 252, 0.14);
+        --bg: #0b1115;
+        --bg-soft: #10181d;
+        --panel: rgba(20, 29, 35, 0.94);
+        --panel-strong: #151f26;
+        --text: #e8f0f5;
+        --muted: #96a8b3;
+        --line: rgba(210, 230, 240, 0.13);
+        --accent: #2dd4bf;
+        --accent-2: #5eead4;
+        --accent-soft: rgba(45, 212, 191, 0.16);
         --ok: #34d399;
         --ok-bg: rgba(52, 211, 153, 0.14);
         --warn: #fbbf24;
@@ -57,8 +52,7 @@
         --danger-bg: rgba(251, 113, 133, 0.14);
         --code-bg: #05080b;
         --code-text: #dce7ec;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
-        --inner-light: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.06);
+        --shadow: none;
       }
     }
 
@@ -71,23 +65,13 @@
       min-height: 100vh;
       min-height: 100dvh;
       background:
-        linear-gradient(138deg, rgba(234, 245, 255, 0.96), rgba(244, 248, 253, 0.9) 42%, rgba(238, 251, 248, 0.94)),
-        repeating-linear-gradient(115deg, rgba(255,255,255,0.36) 0 1px, transparent 1px 46px),
+        radial-gradient(circle at 16% 0%, rgba(20, 184, 166, 0.24), transparent 32%),
+        radial-gradient(circle at 92% 6%, rgba(59, 130, 246, 0.14), transparent 34%),
         var(--bg);
-      background-attachment: fixed;
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.45;
       -webkit-font-smoothing: antialiased;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background:
-          linear-gradient(138deg, rgba(6, 10, 15, 0.98), rgba(10, 18, 26, 0.94) 48%, rgba(9, 24, 29, 0.94)),
-          repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 46px),
-          var(--bg);
-      }
     }
 
     button,
@@ -101,14 +85,10 @@
       border-radius: 999px;
       padding: 9px 15px;
       color: var(--text);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.34)),
-        var(--panel-strong);
+      background: var(--panel-strong);
       font-weight: 750;
-      letter-spacing: 0;
-      box-shadow: var(--inner-light), 0 10px 24px rgba(24, 45, 62, 0.08);
-      backdrop-filter: blur(22px) saturate(1.35);
-      -webkit-backdrop-filter: blur(22px) saturate(1.35);
+      letter-spacing: 0.01em;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset;
       touch-action: manipulation;
     }
 
@@ -116,12 +96,9 @@
     button:disabled { opacity: 0.55; transform: none; }
 
     button.primary {
-      background:
-        linear-gradient(135deg, rgba(11,127,134,0.86), rgba(56,189,248,0.8)),
-        var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
       border-color: transparent;
       color: #fff;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), 0 12px 26px rgba(56, 189, 248, 0.22);
     }
 
     button.danger {
@@ -131,7 +108,7 @@
     }
 
     button.ghost {
-      background: rgba(255,255,255,0.18);
+      background: transparent;
     }
 
     main {
@@ -140,7 +117,7 @@
       padding:
         calc(16px + env(safe-area-inset-top, 0px))
         calc(16px + env(safe-area-inset-right, 0px))
-        calc(24px + env(safe-area-inset-bottom, 0px))
+        calc(108px + env(safe-area-inset-bottom, 0px))
         calc(16px + env(safe-area-inset-left, 0px));
     }
 
@@ -153,40 +130,33 @@
       align-items: start;
       margin-bottom: 16px;
       padding: 22px;
-      border: 1px solid var(--edge);
-      border-radius: 28px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
       background:
-        linear-gradient(145deg, rgba(255,255,255,0.72), rgba(255,255,255,0.32) 52%, rgba(255,255,255,0.18)),
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(255,255,255,0.58)),
         var(--panel);
-      box-shadow: var(--shadow), var(--inner-light);
-      backdrop-filter: blur(30px) saturate(1.55);
-      -webkit-backdrop-filter: blur(30px) saturate(1.55);
-      isolation: isolate;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
     }
 
     @media (prefers-color-scheme: dark) {
       .hero {
         background:
-          linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05) 52%, rgba(255,255,255,0.02)),
+          linear-gradient(135deg, rgba(21,31,38,0.95), rgba(17,25,31,0.78)),
           var(--panel);
       }
     }
 
-    .hero::before,
-    .panel::before,
-    .metric::before,
-    .chart-tile::before,
-    .app-card::before {
+    .hero::after {
       content: "";
       position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.62), transparent 34%),
-        linear-gradient(315deg, rgba(255,255,255,0.24), transparent 40%);
-      opacity: 0.62;
+      right: -80px;
+      top: -80px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(20, 184, 166, 0.18);
       pointer-events: none;
-      z-index: -1;
     }
 
     .brand {
@@ -200,9 +170,9 @@
 
     h1 {
       margin: 0;
-      font-size: 30px;
-      font-weight: 860;
-      letter-spacing: 0;
+      font-size: 28px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
@@ -234,14 +204,12 @@
       gap: 6px;
       min-height: 28px;
       padding: 4px 10px;
-      border: 1px solid var(--edge);
+      border: 1px solid var(--line);
       border-radius: 999px;
       color: var(--muted);
-      background: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.42);
       font-size: 12px;
       font-weight: 750;
-      backdrop-filter: blur(18px) saturate(1.4);
-      -webkit-backdrop-filter: blur(18px) saturate(1.4);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -260,16 +228,12 @@
     }
 
     .panel {
-      position: relative;
-      overflow: hidden;
       background: var(--panel);
-      border: 1px solid var(--edge);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 16px;
-      box-shadow: var(--shadow), var(--inner-light);
-      backdrop-filter: blur(28px) saturate(1.48);
-      -webkit-backdrop-filter: blur(28px) saturate(1.48);
-      isolation: isolate;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
     }
 
     .panel.full { grid-column: 1 / -1; }
@@ -301,31 +265,19 @@
     }
 
     .app-card {
-      position: relative;
-      overflow: hidden;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 12px;
       align-items: center;
       min-height: 74px;
       padding: 12px;
-      border: 1px solid var(--edge);
-      border-radius: 18px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.18)),
-        var(--panel);
-      box-shadow: var(--inner-light);
-      backdrop-filter: blur(18px) saturate(1.35);
-      -webkit-backdrop-filter: blur(18px) saturate(1.35);
-      isolation: isolate;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.46);
     }
 
     @media (prefers-color-scheme: dark) {
-      .app-card {
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)),
-          var(--panel);
-      }
+      .app-card { background: rgba(255, 255, 255, 0.035); }
     }
 
     .app-name {
@@ -349,11 +301,10 @@
       appearance: none;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(112, 125, 136, 0.28);
+      background: #cbd5dd;
       position: relative;
       flex: 0 0 auto;
-      transition: background 0.18s ease, box-shadow 0.18s ease;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.08), inset 0 -1px 0 rgba(255,255,255,0.36);
+      transition: background 0.18s ease;
     }
 
     input[type="checkbox"]::after {
@@ -379,12 +330,9 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 9px 12px;
-      background: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.36);
       color: var(--text);
       outline: none;
-      box-shadow: var(--inner-light);
-      backdrop-filter: blur(16px) saturate(1.28);
-      -webkit-backdrop-filter: blur(16px) saturate(1.28);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -406,12 +354,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 6px;
       padding: 5px;
-      border: 1px solid var(--edge);
+      border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.22);
-      box-shadow: var(--inner-light);
-      backdrop-filter: blur(18px) saturate(1.35);
-      -webkit-backdrop-filter: blur(18px) saturate(1.35);
+      background: rgba(255, 255, 255, 0.38);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -454,7 +399,7 @@
       border: 1px solid var(--line);
       border-radius: 999px;
       padding: 4px 8px 4px 12px;
-      background: rgba(255,255,255,0.22);
+      background: var(--accent-soft);
       color: var(--text);
       font-size: 13px;
       font-weight: 800;
@@ -478,10 +423,8 @@
       margin-top: 12px;
       padding: 12px;
       border-radius: 14px;
-      border: 1px solid var(--edge);
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.34), rgba(56,189,248,0.12)),
-        var(--accent-soft);
+      border: 1px dashed rgba(20, 184, 166, 0.38);
+      background: var(--accent-soft);
       color: var(--text);
       font-size: 13px;
       font-weight: 700;
@@ -504,17 +447,11 @@
     }
 
     .metric {
-      position: relative;
-      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 12px;
       min-height: 86px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.13)),
-        var(--panel);
-      box-shadow: var(--inner-light);
-      isolation: isolate;
+      background: rgba(255, 255, 255, 0.38);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -549,17 +486,11 @@
     }
 
     .chart-tile {
-      position: relative;
-      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 10px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.1)),
-        var(--panel);
+      background: rgba(255, 255, 255, 0.28);
       min-height: 70px;
-      box-shadow: var(--inner-light);
-      isolation: isolate;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -582,16 +513,11 @@
 
     .chart-box {
       position: relative;
-      border: 1px solid var(--edge);
-      border-radius: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
       padding: 10px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08)),
-        rgba(56, 189, 248, 0.07);
+      background: linear-gradient(180deg, rgba(20, 184, 166, 0.08), rgba(20, 184, 166, 0.015));
       overflow: hidden;
-      box-shadow: var(--inner-light);
-      backdrop-filter: blur(18px) saturate(1.32);
-      -webkit-backdrop-filter: blur(18px) saturate(1.32);
     }
 
     .chart-box canvas {
@@ -629,9 +555,9 @@
       gap: 6px;
       min-height: 24px;
       padding: 2px 8px;
-      border: 1px solid var(--edge);
+      border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.22);
     }
 
     .legend-dot {
@@ -713,7 +639,7 @@
       text-align: center;
       padding: 11px 14px;
       border-radius: 999px;
-      background: rgba(16, 25, 35, 0.82);
+      background: var(--text);
       color: var(--bg);
       font-size: 14px;
       font-weight: 760;
@@ -750,8 +676,182 @@
 
     .log-scroll-bottom[hidden] { display: none; }
 
+
+
+    .svg-filters {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .page-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .panel[data-page] {
+      display: none;
+      transform-origin: 50% 16px;
+    }
+
+    .panel[data-page].active-page {
+      display: block;
+      animation: pageIn 0.24s ease both;
+    }
+
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    body[data-page-dir="next"] .panel[data-page].active-page {
+      animation: pageSlideNext 0.34s cubic-bezier(.2,.92,.18,1) both;
+    }
+
+    body[data-page-dir="prev"] .panel[data-page].active-page {
+      animation: pageSlidePrev 0.34s cubic-bezier(.2,.92,.18,1) both;
+    }
+
+    @keyframes pageSlideNext {
+      from { opacity: 0; transform: translateX(22px) scale(0.985); filter: blur(6px); }
+      to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+    }
+
+    @keyframes pageSlidePrev {
+      from { opacity: 0; transform: translateX(-22px) scale(0.985); filter: blur(6px); }
+      to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+    }
+
+    .liquid-bottom-nav {
+      position: fixed;
+      left: max(14px, env(safe-area-inset-left, 0px));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 30;
+      width: min(520px, calc(100% - 28px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255,255,255,0.72), transparent 34%),
+        radial-gradient(circle at 86% 14%, rgba(125,211,252,0.42), transparent 28%),
+        linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16)),
+        rgba(255,255,255,0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.65),
+        inset 0 -1px 0 rgba(255,255,255,0.16),
+        0 18px 48px rgba(6, 16, 24, 0.22);
+      backdrop-filter: blur(28px) saturate(1.7) contrast(1.04);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7) contrast(1.04);
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .liquid-bottom-nav {
+        border-color: rgba(255, 255, 255, 0.16);
+        background:
+          radial-gradient(circle at 15% 10%, rgba(255,255,255,0.16), transparent 34%),
+          radial-gradient(circle at 86% 14%, rgba(94,234,212,0.18), transparent 28%),
+          linear-gradient(135deg, rgba(255,255,255,0.11), rgba(255,255,255,0.04)),
+          rgba(11, 17, 21, 0.62);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.16),
+          inset 0 -1px 0 rgba(255,255,255,0.05),
+          0 18px 48px rgba(0, 0, 0, 0.42);
+      }
+    }
+
+    .liquid-bottom-nav::before {
+      content: "";
+      position: absolute;
+      inset: -16px;
+      z-index: -1;
+      border-radius: inherit;
+      background:
+        linear-gradient(115deg, rgba(255,255,255,0.36), transparent 28%, rgba(255,255,255,0.16) 52%, transparent 76%),
+        radial-gradient(circle at 50% 115%, rgba(56,189,248,0.22), transparent 52%);
+      filter: none;
+      opacity: 0.62;
+      pointer-events: none;
+    }
+
+    .liquid-bottom-nav::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.16),
+        inset 0 10px 20px rgba(255,255,255,0.14),
+        inset 0 -12px 18px rgba(0,0,0,0.08);
+    }
+
+    .nav-tab {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: 18px auto;
+      place-items: center;
+      gap: 3px;
+      min-height: 52px;
+      padding: 6px 4px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0;
+      transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .nav-tab.active {
+      color: #fff;
+      background:
+        radial-gradient(circle at 25% 12%, rgba(255,255,255,0.64), transparent 35%),
+        linear-gradient(135deg, rgba(11,127,134,0.88), rgba(56,189,248,0.8));
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.46),
+        0 8px 22px rgba(56,189,248,0.24);
+      transform: translateY(-1px);
+    }
+
+    .nav-tab:active { transform: translateY(1px) scale(0.985); }
+    .nav-tab.active:active { transform: translateY(0) scale(0.985); }
+    .nav-tab:disabled { opacity: 0.72; }
+
+    .toast { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .hero,
+      .panel,
+      .metric,
+      .app-card,
+      .chart-box,
+      button,
+      .liquid-bottom-nav { background: var(--panel-strong); }
+    }
+
     @media (max-width: 820px) {
-      main { padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px)); }
+      main { padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(106px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px)); }
+      .liquid-bottom-nav { width: calc(100% - 24px); left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+      .nav-tab { min-height: 50px; font-size: 11px; }
       .hero { grid-template-columns: 1fr; padding: 18px; border-radius: 22px; }
       .hero-actions { justify-content: flex-start; }
       .grid { grid-template-columns: 1fr; }
@@ -766,6 +866,596 @@
       .status-grid, .chart-summary, .quick-actions { grid-template-columns: 1fr; }
       .time-editor { grid-template-columns: 1fr; }
     }
+
+
+    /* Apple-style liquid glass overrides: transparent white/blue, custom image background */
+    :root {
+      --bg: #071522;
+      --bg-soft: rgba(255,255,255,0.10);
+      --panel: rgba(255,255,255,0.155);
+      --panel-strong: rgba(255,255,255,0.245);
+      --text: rgba(255,255,255,0.96);
+      --muted: rgba(229,244,255,0.72);
+      --line: rgba(255,255,255,0.24);
+      --edge: rgba(255,255,255,0.36);
+      --accent: #4fb8ff;
+      --accent-2: #b8e7ff;
+      --accent-soft: rgba(79,184,255,0.20);
+      --ok: #a7f3d0;
+      --ok-bg: rgba(16,185,129,0.13);
+      --warn: #fde68a;
+      --warn-bg: rgba(251,191,36,0.14);
+      --danger: #fecdd3;
+      --danger-bg: rgba(244,63,94,0.13);
+      --code-bg: rgba(4,12,20,0.50);
+      --code-text: rgba(235,248,255,0.94);
+      --shadow: 0 24px 74px rgba(0,38,77,0.28);
+      --inner-light: inset 0 1px 0 rgba(255,255,255,0.48), inset 0 -1px 0 rgba(255,255,255,0.10);
+      --glass-blur: 30px;
+      --nav-x: 8px;
+      --nav-w: 92px;
+      --liquid-stretch: 1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #050d16;
+        --panel: rgba(255,255,255,0.12);
+        --panel-strong: rgba(255,255,255,0.19);
+        --text: rgba(255,255,255,0.96);
+        --muted: rgba(223,242,255,0.70);
+        --line: rgba(255,255,255,0.18);
+        --edge: rgba(255,255,255,0.28);
+        --accent: #62c6ff;
+        --accent-2: #d7f3ff;
+        --code-bg: rgba(4,10,16,0.54);
+      }
+    }
+
+    html, body { background: #071522; }
+
+    body {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(3,13,24,0.12), rgba(3,13,24,0.48)),
+        radial-gradient(circle at 20% 0%, rgba(152,220,255,0.34), transparent 34%),
+        radial-gradient(circle at 88% 18%, rgba(68,147,255,0.38), transparent 36%),
+        #071522;
+      color: var(--text);
+      text-shadow: 0 1px 12px rgba(0,24,48,0.18);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background: transparent;
+      transform: scale(1.03);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(11,75,128,0.15) 42%, rgba(0,16,34,0.36)),
+        radial-gradient(circle at 50% 120%, rgba(44,170,255,0.38), transparent 46%);
+    }
+
+    .hero,
+    .panel,
+    .metric,
+    .app-card,
+    .chart-tile,
+    .chart-box,
+    .summary,
+    .badge,
+    .segmented,
+    input[type="number"],
+    input[type="time"],
+    .time-chip,
+    button {
+      border-color: rgba(255,255,255,0.24) !important;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08) 46%, rgba(255,255,255,0.035)),
+        rgba(255,255,255,0.09) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.42),
+        inset 0 -1px 0 rgba(255,255,255,0.08),
+        0 18px 48px rgba(3,18,36,0.18) !important;
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.55) contrast(1.04) !important;
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.55) contrast(1.04) !important;
+    }
+
+    .hero,
+    .panel {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.20), rgba(255,255,255,0.07) 54%, rgba(77,177,255,0.055)),
+        rgba(255,255,255,0.075) !important;
+    }
+
+    .hero::before,
+    .panel::before,
+    .metric::before,
+    .chart-tile::before,
+    .app-card::before {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.42), transparent 30%),
+        linear-gradient(315deg, rgba(120,210,255,0.20), transparent 42%) !important;
+      opacity: 0.68 !important;
+    }
+
+    .hero::after {
+      background: radial-gradient(circle, rgba(118,211,255,0.30), transparent 62%) !important;
+      filter: blur(2px);
+    }
+
+    .brand { gap: 0; }
+    h1 { color: #fff; text-shadow: 0 6px 26px rgba(0,63,128,0.34); }
+    .subtitle, .hint, .mini, .metric span, .chart-tile span, .page-topline { color: rgba(236,248,255,0.72) !important; }
+    .app-name, label, .metric strong, .chart-tile strong { color: rgba(255,255,255,0.96); }
+
+    button.primary,
+    .segmented button.active {
+      background:
+        radial-gradient(circle at 25% 15%, rgba(255,255,255,0.62), transparent 38%),
+        linear-gradient(135deg, rgba(64,164,255,0.88), rgba(169,226,255,0.60)) !important;
+      color: #fff !important;
+      border-color: rgba(255,255,255,0.36) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.54),
+        0 12px 30px rgba(64,164,255,0.30) !important;
+    }
+
+    button.danger {
+      color: #fff !important;
+      background: rgba(255,77,109,0.18) !important;
+      border-color: rgba(255,255,255,0.24) !important;
+    }
+
+    input[type="checkbox"] {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.32);
+    }
+    input[type="checkbox"]:checked { background: rgba(75,172,255,0.84); }
+
+    pre {
+      background:
+        linear-gradient(145deg, rgba(2,11,20,0.58), rgba(2,11,20,0.38)),
+        rgba(2,11,20,0.44) !important;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(236,248,255,0.94);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    }
+
+    .liquid-bottom-nav {
+      --nav-height: 64px;
+      left: 50% !important;
+      right: auto !important;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+      width: min(520px, calc(100% - 28px)) !important;
+      min-height: var(--nav-height);
+      transform: translateX(-50%);
+      display: flex !important;
+      grid-template-columns: none !important;
+      align-items: center;
+      gap: 8px !important;
+      padding: 8px !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(255,255,255,0.34) !important;
+      border-radius: 999px !important;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.24), rgba(255,255,255,0.075)),
+        rgba(255,255,255,0.105) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.46),
+        inset 0 -1px 0 rgba(255,255,255,0.10),
+        0 18px 60px rgba(0,30,70,0.34) !important;
+      backdrop-filter: blur(36px) saturate(1.8) contrast(1.08) !important;
+      -webkit-backdrop-filter: blur(36px) saturate(1.8) contrast(1.08) !important;
+      touch-action: pan-x;
+      will-change: transform, opacity, filter;
+      transition:
+        transform 0.48s cubic-bezier(.2,.92,.18,1),
+        opacity 0.26s ease,
+        filter 0.26s ease;
+    }
+
+    body.nav-hidden .liquid-bottom-nav {
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(8px);
+      transform: translate(-50%, calc(100% + 34px)) scale(0.94);
+    }
+
+    .liquid-bottom-nav::-webkit-scrollbar { display: none; }
+
+    .nav-indicator {
+      position: absolute;
+      z-index: 0;
+      top: 50%;
+      left: 0;
+      width: var(--nav-w);
+      height: calc(var(--nav-height) - 14px);
+      border-radius: 999px;
+      transform: translate3d(var(--nav-x), -50%, 0) scaleX(var(--liquid-stretch, 1));
+      transform-origin: 50% 50%;
+      background:
+        radial-gradient(circle at 28% 12%, rgba(255,255,255,0.82), transparent 38%),
+        radial-gradient(circle at 72% 92%, rgba(100,197,255,0.46), transparent 44%),
+        linear-gradient(135deg, rgba(255,255,255,0.34), rgba(93,186,255,0.22)),
+        rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.66),
+        inset 0 -1px 0 rgba(255,255,255,0.12),
+        0 10px 30px rgba(69,166,255,0.32);
+      backdrop-filter: blur(34px) saturate(1.95) brightness(1.08);
+      -webkit-backdrop-filter: blur(34px) saturate(1.95) brightness(1.08);
+      filter: none;
+      transition: transform 0.34s cubic-bezier(.2,.92,.18,1), width 0.34s cubic-bezier(.2,.92,.18,1), opacity 0.22s ease;
+      pointer-events: none;
+    }
+
+    .nav-indicator::before,
+    .nav-indicator::after {
+      content: "";
+      position: absolute;
+      inset: 7px 12px auto;
+      height: 15px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.72), rgba(255,255,255,0.12));
+      opacity: 0.62;
+      filter: blur(0.2px);
+      pointer-events: none;
+    }
+
+    .nav-indicator::after {
+      inset: auto 16px 7px auto;
+      width: 34%;
+      height: 10px;
+      background: radial-gradient(circle, rgba(255,255,255,0.40), transparent 68%);
+      opacity: 0.44;
+    }
+
+    .liquid-bottom-nav.is-dragging .nav-indicator {
+      transition-duration: 0.12s;
+      transform: translate3d(var(--nav-x), -50%, 0) scaleX(calc(var(--liquid-stretch, 1) + 0.08));
+    }
+
+    .nav-tab {
+      position: relative;
+      z-index: 1;
+      flex: 1 0 88px;
+      grid-template-rows: none !important;
+      min-height: 48px !important;
+      padding: 0 14px !important;
+      scroll-snap-align: center;
+      color: rgba(235,248,255,0.74) !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      transform: scale(0.96);
+      transition:
+        transform 0.28s cubic-bezier(.2,.92,.18,1),
+        color 0.22s ease,
+        opacity 0.22s ease,
+        text-shadow 0.22s ease;
+    }
+
+    .nav-tab span:last-child,
+    .nav-tab span:first-child {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 880;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .nav-tab.active {
+      color: #fff !important;
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+      transform: scale(1.12) translateY(-1px) !important;
+      text-shadow: 0 4px 18px rgba(44,146,255,0.40);
+    }
+
+    .nav-tab:active { transform: scale(1.04) translateY(0) !important; }
+    .liquid-bottom-nav.is-dragging .nav-tab.active { transform: scale(1.17) translateY(-2px) !important; }
+
+    @media (max-width: 430px) {
+      .liquid-bottom-nav {
+        width: calc(100% - 22px) !important;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .nav-tab { flex-basis: 78px; padding: 0 10px !important; }
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .hero,
+      .panel,
+      .metric,
+      .app-card,
+      .chart-box,
+      button,
+      .liquid-bottom-nav,
+      .nav-indicator { background: rgba(18,56,91,0.86) !important; }
+    }
+
+    /* Lightweight WebView skin inspired by dist/webroot/lzy.css.
+       Keep the WebUI fast by avoiding full-screen images, SVG filters, and large blur layers. */
+    :root {
+      --bg: #f8f9fa;
+      --bg-soft: #ffffff;
+      --panel: rgba(252, 254, 255, 0.88);
+      --panel-strong: rgba(255, 255, 255, 0.94);
+      --text: #323232;
+      --muted: #525c5c;
+      --line: rgba(0, 0, 0, 0.08);
+      --edge: rgba(0, 0, 0, 0.08);
+      --accent: #3498db;
+      --accent-2: #5dade2;
+      --accent-soft: rgba(52, 152, 219, 0.12);
+      --ok: #1f9d55;
+      --ok-bg: rgba(52, 199, 89, 0.13);
+      --warn: #b45309;
+      --warn-bg: rgba(255, 149, 0, 0.13);
+      --danger: #c62828;
+      --danger-bg: rgba(255, 59, 48, 0.12);
+      --code-bg: rgba(255, 255, 255, 0.78);
+      --code-text: #323232;
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --bg-soft: #1e2328;
+        --panel: rgba(20, 25, 30, 0.88);
+        --panel-strong: rgba(30, 35, 40, 0.94);
+        --text: #ffffff;
+        --muted: #e5e9f0;
+        --line: rgba(255, 255, 255, 0.10);
+        --edge: rgba(255, 255, 255, 0.10);
+        --accent: #5dade2;
+        --accent-2: #87ceeb;
+        --accent-soft: rgba(93, 173, 226, 0.14);
+        --code-bg: rgba(5, 6, 10, 0.70);
+        --code-text: #e5e9f0;
+        --shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+      }
+    }
+
+    html,
+    body {
+      background: var(--bg) !important;
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(248,249,250,0.96)),
+        var(--bg) !important;
+      color: var(--text);
+      text-shadow: none !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background:
+          linear-gradient(180deg, rgba(24,28,33,0.92), rgba(18,18,18,1)),
+          var(--bg) !important;
+      }
+    }
+
+    body::before,
+    body::after,
+    .svg-filters,
+    .nav-indicator {
+      display: none !important;
+    }
+
+    main {
+      width: min(480px, 100%) !important;
+      padding:
+        calc(14px + env(safe-area-inset-top, 0px))
+        calc(15px + env(safe-area-inset-right, 0px))
+        calc(92px + env(safe-area-inset-bottom, 0px))
+        calc(15px + env(safe-area-inset-left, 0px)) !important;
+    }
+
+    .grid,
+    .status-grid,
+    .chart-summary,
+    .quick-actions {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+
+    .hero,
+    .panel,
+    .metric,
+    .app-card,
+    .chart-tile,
+    .chart-box,
+    .summary,
+    .badge,
+    .segmented,
+    input[type="number"],
+    input[type="time"],
+    .time-chip,
+    button,
+    pre {
+      border: 1px solid var(--line) !important;
+      background: var(--panel) !important;
+      box-shadow: var(--shadow) !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      filter: none !important;
+    }
+
+    .hero,
+    .panel,
+    .metric,
+    .app-card,
+    .chart-tile,
+    .chart-box {
+      border-radius: 24px !important;
+    }
+
+    .hero {
+      grid-template-columns: 1fr !important;
+      padding: 16px !important;
+      margin-bottom: 12px !important;
+    }
+
+    .hero::before,
+    .hero::after,
+    .panel::before,
+    .metric::before,
+    .chart-tile::before,
+    .app-card::before,
+    .liquid-bottom-nav::before,
+    .liquid-bottom-nav::after,
+    .nav-indicator::before,
+    .nav-indicator::after {
+      display: none !important;
+    }
+
+    h1 {
+      color: var(--text) !important;
+      text-shadow: none !important;
+    }
+
+    .subtitle,
+    .hint,
+    .mini,
+    .metric span,
+    .chart-tile span,
+    .page-topline {
+      color: var(--muted) !important;
+    }
+
+    .app-name,
+    label,
+    .metric strong,
+    .chart-tile strong {
+      color: var(--text) !important;
+    }
+
+    button {
+      min-height: 36px !important;
+      padding: 8px 12px !important;
+      border-radius: 12px !important;
+      color: var(--text) !important;
+      transition: transform 0.18s ease, opacity 0.18s ease, background-color 0.18s ease !important;
+    }
+
+    button.primary,
+    .segmented button.active {
+      background: var(--accent) !important;
+      color: #fff !important;
+      border-color: transparent !important;
+    }
+
+    button.danger {
+      background: rgba(255, 59, 48, 0.14) !important;
+      color: var(--danger) !important;
+    }
+
+    pre {
+      color: var(--code-text) !important;
+      background: var(--code-bg) !important;
+    }
+
+    .chart-box canvas {
+      height: 210px !important;
+    }
+
+    body[data-page-dir="next"] .panel[data-page].active-page,
+    body[data-page-dir="prev"] .panel[data-page].active-page,
+    .panel[data-page].active-page {
+      animation: pageInLite 0.20s ease both !important;
+    }
+
+    @keyframes pageInLite {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .liquid-bottom-nav {
+      left: 50% !important;
+      right: auto !important;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+      width: min(420px, 65%) !important;
+      min-height: auto !important;
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+      gap: 0 !important;
+      border-radius: 28px !important;
+      border: 1px solid var(--line) !important;
+      background: var(--panel-strong) !important;
+      box-shadow: var(--shadow) !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      filter: none !important;
+      overflow: visible !important;
+      touch-action: pan-x;
+      transform: translateX(-50%) !important;
+      transition: transform 0.22s ease, opacity 0.18s ease !important;
+    }
+
+    body.nav-hidden .liquid-bottom-nav {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, calc(100% + 24px)) !important;
+    }
+
+    .nav-tab {
+      flex: 1 1 0 !important;
+      min-height: 44px !important;
+      padding: 6px 4px !important;
+      color: var(--text) !important;
+      opacity: 0.78;
+      transform: none !important;
+      transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease !important;
+    }
+
+    .nav-tab.active {
+      color: var(--text) !important;
+      opacity: 1;
+      transform: none !important;
+      text-shadow: none !important;
+      font-weight: 850;
+    }
+
+    .nav-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 4px;
+      width: 5px;
+      height: 5px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #87ceeb;
+    }
+
+    .nav-tab:active {
+      transform: scale(0.96) !important;
+    }
+
+    .liquid-bottom-nav.is-dragging .nav-tab.active {
+      transform: scale(0.98) !important;
+    }
+
   </style>
 </head>
 <body>
@@ -790,8 +1480,9 @@
       </div>
     </section>
 
-    <section class="grid">
-      <div class="panel">
+    <section class="grid" id="pageGrid">
+      <div class="panel active-page" data-page="config">
+        <div class="page-topline"><span>配置</span><span>01 / 04</span></div>
         <div class="panel-title">
           <h2>目标应用</h2>
           <span class="mini">选择要定时重启的应用</span>
@@ -814,7 +1505,8 @@
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel active-page" data-page="config">
+        <div class="page-topline"><span>配置</span><span>01 / 04</span></div>
         <div class="panel-title">
           <h2>定时策略</h2>
           <span class="mini">native timerfd 调度</span>
@@ -858,7 +1550,8 @@
         </div>
       </div>
 
-      <div class="panel full">
+      <div class="panel full" data-page="status">
+        <div class="page-topline"><span>状态</span><span>02 / 04</span></div>
         <div class="panel-title">
           <h2>运行状态</h2>
           <span class="mini" id="lastUpdated">未刷新</span>
@@ -900,7 +1593,8 @@
       </div>
 
 
-      <div class="panel full" id="chartPanel">
+      <div class="panel full" id="chartPanel" data-page="trend">
+        <div class="page-topline"><span>趋势</span><span>03 / 04</span></div>
         <div class="panel-title">
           <h2>任务趋势</h2>
           <span class="mini" id="chartUpdated">等待日志数据</span>
@@ -935,7 +1629,8 @@
         </div>
       </div>
 
-      <div class="panel full">
+      <div class="panel full" data-page="status">
+        <div class="page-topline"><span>状态</span><span>02 / 04</span></div>
         <div class="panel-title">
           <h2>调度器操作</h2>
           <span class="mini">操作 native / supervisor</span>
@@ -952,7 +1647,8 @@
         </div>
       </div>
 
-      <div class="panel full" id="logPanel">
+      <div class="panel full" id="logPanel" data-page="log">
+        <div class="page-topline"><span>日志</span><span>04 / 04</span></div>
         <div class="panel-title">
           <h2>日志</h2>
           <span class="mini">最近 180 行</span>
@@ -976,6 +1672,22 @@
     </section>
   </main>
 
+  <nav class="liquid-bottom-nav" aria-label="页面导航">
+    <span class="nav-indicator" aria-hidden="true"></span>
+    <button class="nav-tab active" type="button" data-target="config" aria-label="配置页">
+      <span>配置</span>
+    </button>
+    <button class="nav-tab" type="button" data-target="status" aria-label="状态页">
+      <span>状态</span>
+    </button>
+    <button class="nav-tab" type="button" data-target="trend" aria-label="趋势页">
+      <span>趋势</span>
+    </button>
+    <button class="nav-tab" type="button" data-target="log" aria-label="日志页">
+      <span>日志</span>
+    </button>
+  </nav>
+
   <div class="toast" id="toast"></div>
 
   <script type="module">
@@ -991,7 +1703,11 @@
       logTimer: 0,
       lastDoctorRaw: "",
       chartData: [],
+      doctorChartEntry: null,
+      currentPage: "config",
     };
+
+    const PAGES = ["config", "status", "trend", "log"];
 
     function moduleRoot() {
       const path = decodeURIComponent(window.location.pathname || "");
@@ -1149,6 +1865,7 @@
 
     async function schedulerScript(action) {
       let lastError = "";
+
       for (const root of moduleRoots()) {
         const script = `${root}/script/scheduler.sh`;
         try {
@@ -1166,12 +1883,14 @@
 
     async function timerBinary(args) {
       let lastError = "";
+
       for (const root of moduleRoots()) {
         const bins = [
           state.doctor && state.doctor.timer_path,
           `${root}/bin/autofire_timed`,
           `${root}/bin/autofire_timed_armeabi-v7a`,
         ];
+
         for (const bin of [...new Set(bins.filter(Boolean))]) {
           try {
             const command = "if [ -x " + shellQuote(bin) + " ]; then " + shellQuote(bin) + " " + args + "; else echo " + shellQuote("Cannot execute " + bin) + " >&2; exit 126; fi";
@@ -1337,9 +2056,45 @@
       $("scheduleSummary").textContent = (enabled ? "已启用" : "未启用") + " · " + apps + " · " + schedule;
     }
 
+    function updateDoctorChartEntry(info) {
+      const drift = Number(pick(info, ["last_drift_ms", "lastDriftMs", "drift_ms"], NaN));
+      const worker = String(pick(info, ["last_worker_exit", "lastWorkerExit"], "") || "");
+      const durationMatch = worker.match(/durationMs=(-?\d+)/);
+      const taskMatch = worker.match(/taskId=([^ ]+)/);
+      const sourceMatch = worker.match(/source=([^ ]+)/);
+      const exitMatch = worker.match(/exitCode=(-?\d+)/);
+      const signalMatch = worker.match(/signal=(-?\d+)/);
+      const hasDrift = Number.isFinite(drift);
+      const hasDuration = Boolean(durationMatch);
+
+      if (!hasDrift && !hasDuration) {
+        state.doctorChartEntry = null;
+        return;
+      }
+
+      state.doctorChartEntry = {
+        taskId: taskMatch ? taskMatch[1] : "doctor",
+        source: sourceMatch ? sourceMatch[1] : "doctor",
+        scheduledAt: "",
+        firedAt: nowText(),
+        driftMs: hasDrift ? drift : null,
+        missedCount: 0,
+        durationMs: durationMatch ? Number(durationMatch[1]) : null,
+        wakeHeldMs: null,
+        exitCode: exitMatch ? Number(exitMatch[1]) : null,
+        signal: signalMatch ? Number(signalMatch[1]) : null,
+      };
+
+      if (!state.chartData || !state.chartData.length) {
+        state.chartData = [state.doctorChartEntry];
+        drawTaskChart();
+      }
+    }
+
     function applyDoctor(info) {
       state.doctor = info;
       state.lastDoctorRaw = JSON.stringify(info, null, 2);
+      updateDoctorChartEntry(info);
 
       const schedulerRunning = pick(info, ["scheduler_running", "native_running", "timer_running"], false);
       const schedulerPid = pick(info, ["scheduler_pid", "native_pid", "timer_pid"], "");
@@ -1414,6 +2169,37 @@
     }
 
 
+
+
+
+    function setPage(page, options = {}) {
+      const target = PAGES.includes(page) ? page : "config";
+      const fromIndex = PAGES.indexOf(state.currentPage);
+      const toIndex = PAGES.indexOf(target);
+      if (target !== state.currentPage && fromIndex >= 0 && toIndex >= 0) {
+        document.body.dataset.pageDir = toIndex > fromIndex ? "next" : "prev";
+      }
+      state.currentPage = target;
+      document.body.dataset.page = target;
+      document.body.classList.remove("nav-hidden");
+
+      document.querySelectorAll("[data-page]").forEach((node) => {
+        node.classList.toggle("active-page", node.dataset.page === target);
+      });
+
+      document.querySelectorAll(".nav-tab").forEach((button) => {
+        const active = button.dataset.target === target;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "page" : "false");
+      });
+      window.setTimeout(() => updateNavIndicator({ noScroll: Boolean(options.noNavScroll) }), 0);
+
+      if (!options.preserveScroll) window.scrollTo({ top: 0, behavior: "smooth" });
+      if (target === "trend") window.setTimeout(drawTaskChart, 80);
+      if (target === "log") window.setTimeout(updateLogBottomButton, 80);
+      window.clearTimeout(setPage.dirTimer);
+      setPage.dirTimer = window.setTimeout(() => { delete document.body.dataset.pageDir; }, 380);
+    }
 
     function formatMs(value) {
       const n = Number(value);
@@ -1606,7 +2392,8 @@
     }
 
     function updateChartFromLog(text) {
-      state.chartData = parseLogMetrics(text);
+      const entries = parseLogMetrics(text);
+      state.chartData = entries.length ? entries : (state.doctorChartEntry ? [state.doctorChartEntry] : []);
       drawTaskChart();
     }
 
@@ -1742,6 +2529,154 @@
       }, 10000);
     }
 
+    function getNav() {
+      return document.querySelector(".liquid-bottom-nav");
+    }
+
+    function updateNavIndicator(options = {}) {
+      const nav = getNav();
+      if (!nav) return;
+      const active = nav.querySelector(".nav-tab.active") || nav.querySelector(".nav-tab");
+      const indicator = nav.querySelector(".nav-indicator");
+      if (!active || !indicator) return;
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const x = activeRect.left - navRect.left + nav.scrollLeft;
+      nav.style.setProperty("--nav-x", x + "px");
+      nav.style.setProperty("--nav-w", activeRect.width + "px");
+      if (!nav.classList.contains("is-dragging")) nav.style.setProperty("--liquid-stretch", "1");
+      if (!options.noScroll) {
+        try { active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); } catch (error) {}
+      }
+    }
+
+    function nearestNavTab(clientX) {
+      const tabs = [...document.querySelectorAll(".nav-tab")];
+      if (!tabs.length) return null;
+      let best = tabs[0];
+      let bestDist = Infinity;
+      for (const tab of tabs) {
+        const rect = tab.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        const dist = Math.abs(center - clientX);
+        if (dist < bestDist) { bestDist = dist; best = tab; }
+      }
+      return best;
+    }
+
+    function setupLiquidNav() {
+      const nav = getNav();
+      if (!nav) return;
+      let dragging = false;
+      let startX = 0;
+      let lastX = 0;
+      let moved = false;
+
+      nav.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        moved = false;
+        startX = event.clientX;
+        lastX = event.clientX;
+        nav.style.setProperty("--liquid-stretch", "1.08");
+        nav.classList.add("is-dragging");
+        try { nav.setPointerCapture(event.pointerId); } catch (error) {}
+      });
+
+      nav.addEventListener("pointermove", (event) => {
+        if (!dragging) return;
+        if (Math.abs(event.clientX - startX) > 8) moved = true;
+        const velocity = Math.min(0.22, Math.abs(event.clientX - lastX) / 180);
+        nav.style.setProperty("--liquid-stretch", String(1.08 + velocity));
+        lastX = event.clientX;
+        const tab = nearestNavTab(event.clientX);
+        if (tab && tab.dataset.target && tab.dataset.target !== state.currentPage) {
+          setPage(tab.dataset.target, { preserveScroll: true, noNavScroll: true });
+        } else {
+          updateNavIndicator({ noScroll: true });
+        }
+      }, { passive: true });
+
+      const endDrag = (event) => {
+        if (!dragging) return;
+        dragging = false;
+        nav.classList.remove("is-dragging");
+        nav.style.setProperty("--liquid-stretch", "1");
+        const tab = nearestNavTab(event.clientX || startX);
+        if (moved && tab && tab.dataset.target) {
+          setPage(tab.dataset.target, { preserveScroll: false });
+        } else {
+          updateNavIndicator();
+        }
+        try { nav.releasePointerCapture(event.pointerId); } catch (error) {}
+      };
+
+      nav.addEventListener("pointerup", endDrag);
+      nav.addEventListener("pointercancel", endDrag);
+      nav.addEventListener("scroll", () => updateNavIndicator({ noScroll: true }), { passive: true });
+      window.setTimeout(updateNavIndicator, 60);
+    }
+
+    function pageByOffset(offset) {
+      const current = PAGES.indexOf(state.currentPage);
+      const next = Math.max(0, Math.min(PAGES.length - 1, current + offset));
+      return PAGES[next] || state.currentPage;
+    }
+
+    function setupPageSwipe() {
+      const grid = $("pageGrid");
+      if (!grid) return;
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+
+      grid.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        if (event.target.closest("button,input,textarea,select,a,pre,.liquid-bottom-nav")) return;
+        tracking = true;
+        startX = event.clientX;
+        startY = event.clientY;
+      }, { passive: true });
+
+      grid.addEventListener("pointerup", (event) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (Math.abs(dx) < 68 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+        const target = pageByOffset(dx < 0 ? 1 : -1);
+        if (target !== state.currentPage) setPage(target);
+      }, { passive: true });
+
+      grid.addEventListener("pointercancel", () => { tracking = false; }, { passive: true });
+    }
+
+    function setupAutoHideNav() {
+      let lastY = window.scrollY || 0;
+      let ticking = false;
+
+      window.addEventListener("scroll", () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY || 0;
+          const delta = y - lastY;
+          const hide = y > 120 && delta > 8;
+          const show = delta < -8 || y < 40;
+          if (hide) document.body.classList.add("nav-hidden");
+          if (show) document.body.classList.remove("nav-hidden");
+          lastY = y;
+          ticking = false;
+        });
+      }, { passive: true });
+    }
+
+    document.querySelectorAll(".nav-tab").forEach((button) => {
+      button.addEventListener("click", () => setPage(button.dataset.target));
+    });
+    setupLiquidNav();
+    setupPageSwipe();
+    setupAutoHideNav();
+
     $("modeDaily").addEventListener("click", () => applyMode("daily"));
     $("modeInterval").addEventListener("click", () => applyMode("interval"));
     $("addDailyTimeBtn").addEventListener("click", addDailyTime);
@@ -1814,9 +2749,11 @@
     window.addEventListener("resize", () => {
       updateLogBottomButton();
       drawTaskChart();
+      updateNavIndicator({ noScroll: true });
     });
     updateLogBottomButton();
     drawTaskChart();
+    setPage("config", { preserveScroll: true });
 
     withBusy(async () => {
       await loadConfig();
@@ -1826,7 +2763,3 @@
   </script>
 </body>
 </html>
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-      backdrop-filter: blur(22px) saturate(1.35);
-      -webkit-backdrop-filter: blur(22px) saturate(1.35);
