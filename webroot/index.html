@@ -2210,53 +2210,77 @@
     }
 
     function parseLogMetrics(text) {
-      const byTask = new Map();
-      const order = [];
-      const wakeQueue = [];
+      const entries = [];
       const lines = String(text || "").split(/\r?\n/);
 
-      function ensureTask(taskId) {
-        const id = String(taskId || "unknown-" + order.length);
-        if (!byTask.has(id)) {
-          const item = { taskId: id, source: "", scheduledAt: "", firedAt: "", driftMs: null, missedCount: 0, durationMs: null, wakeHeldMs: null, exitCode: null, signal: null };
-          byTask.set(id, item);
-          order.push(item);
+      function createEntry(taskId, source, scheduledAt, firedAt, driftMs, missedCount) {
+        return {
+          instanceId: String(taskId || "unknown") + "@" + String(firedAt || scheduledAt || entries.length),
+          taskId: String(taskId || "unknown"),
+          source: String(source || ""),
+          scheduledAt: String(scheduledAt || ""),
+          firedAt: String(firedAt || ""),
+          driftMs: driftMs === null ? null : Number(driftMs),
+          missedCount: Number(missedCount) || 0,
+          durationMs: null,
+          wakeHeldMs: null,
+          exitCode: null,
+          signal: null,
+          completed: false,
+        };
+      }
+
+      function findLatestPendingEntry(taskId) {
+        const id = String(taskId || "");
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const item = entries[i];
+          if (item.taskId === id && !item.completed) return item;
         }
-        return byTask.get(id);
+        return null;
+      }
+
+      function findLatestWakeTarget() {
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const item = entries[i];
+          if (!item.completed && item.wakeHeldMs === null) return item;
+        }
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const item = entries[i];
+          if (item.wakeHeldMs === null) return item;
+        }
+        return null;
       }
 
       for (const line of lines) {
         let m = line.match(/任务触发[：:].*?taskId=(\d+).*?source=([^,，]+).*?scheduledAt=([^,，]+).*?firedAt=([^,，]+).*?driftMs=(-?\d+).*?missedCount=(\d+)/);
         if (m) {
-          const item = ensureTask(m[1]);
-          item.source = m[2].trim();
-          item.scheduledAt = m[3].trim();
-          item.firedAt = m[4].trim();
-          item.driftMs = Number(m[5]);
-          item.missedCount = Number(m[6]);
-          wakeQueue.push(item);
+          entries.push(createEntry(m[1], m[2].trim(), m[3].trim(), m[4].trim(), m[5], m[6]));
           continue;
         }
 
         m = line.match(/workerExit[：:].*?taskId=(\d+).*?source=([^,，]+).*?exitCode=(-?\d+).*?signal=(-?\d+).*?durationMs=(\d+)/);
         if (m) {
-          const item = ensureTask(m[1]);
-          item.source = item.source || m[2].trim();
-          item.exitCode = Number(m[3]);
-          item.signal = Number(m[4]);
-          item.durationMs = Number(m[5]);
+          const item = findLatestPendingEntry(m[1]);
+          if (item) {
+            item.source = item.source || m[2].trim();
+            item.exitCode = Number(m[3]);
+            item.signal = Number(m[4]);
+            item.durationMs = Number(m[5]);
+            item.completed = true;
+          }
           continue;
         }
 
         m = line.match(/任务唤醒锁已释放[：:].*?heldMs=(\d+)/);
         if (m) {
-          const target = [...wakeQueue].reverse().find((item) => item.wakeHeldMs === null) || order[order.length - 1];
+          const target = findLatestWakeTarget();
           if (target) target.wakeHeldMs = Number(m[1]);
         }
       }
 
-      return order
+      return entries
         .filter((item) => item.driftMs !== null || item.durationMs !== null || item.wakeHeldMs !== null)
+        .map(({ completed, ...item }) => item)
         .slice(-20);
     }
 
