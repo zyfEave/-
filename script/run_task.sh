@@ -415,6 +415,10 @@ restart_package() {
   esac
 
   _settle_seconds=$APP_SETTLE_SECONDS
+  if [ "$_pkg" = "$WECHAT_PKG" ]; then
+    _settle_seconds=60
+    log_msg "INFO" "$_label 微信前台停留60秒后回桌面"
+  fi
   if [ "$_pkg" = "$DOUYIN_PKG" ] && [ "$SOURCE" = "action" ]; then
     _settle_seconds=60
     log_msg "INFO" "$_label Action模式：抖音前台停留60秒后回桌面"
